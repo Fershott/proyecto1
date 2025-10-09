@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vista previa - Plataforma académica accesible</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles.css" />
+    <style>
+      body {
+        max-width: 100vw;
+        overflow-x: hidden;
+      }
+
+      body.is-preview-desktop {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 48px 0 96px;
+        min-height: 100vh;
+      }
+
+      .preview-banner {
+        text-align: center;
+        padding: 16px;
+        background: linear-gradient(135deg, rgba(126, 108, 255, 0.18), rgba(16, 198, 255, 0.18));
+        border-bottom: 1px solid rgba(126, 147, 255, 0.25);
+        font-size: 14px;
+        color: rgba(232, 236, 255, 0.82);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      body.is-preview-desktop .preview-banner {
+        width: 1180px;
+        border-radius: 28px;
+        margin-bottom: 32px;
+      }
+
+      body.is-preview-desktop .app-shell {
+        width: 1180px;
+        min-width: 1180px;
+        padding: 72px 48px 120px;
+      }
+
+      body.is-preview-desktop .tab-panels {
+        display: grid;
+        gap: 56px;
+      }
+
+      .preview-tab {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .preview-tab__label {
+        font-size: 13px;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: rgba(196, 205, 240, 0.6);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .preview-tab__label::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 2px;
+        border-radius: 999px;
+        background: rgba(126, 147, 255, 0.32);
+      }
+
+      .tab-panel + .tab-panel {
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body class="is-preview-desktop">
+    <div class="preview-banner">
+      Vista estática de referencia. La aplicación real cambia entre pestañas de manera dinámica.
+    </div>
+    <div class="app-shell">
+      <header class="overview" aria-labelledby="welcome-heading">
+        <div class="overview__brand">
+          <div class="brand-icon" aria-hidden="true">CC</div>
+          <div>
+            <p class="overview__eyebrow">Tu hub de estudio</p>
+            <h1 id="welcome-heading" class="overview__title">CogniCore</h1>
+            <p class="overview__description">
+              Un espacio guiado para personas neurodivergentes: planifica con calma, enfócate con ritmo y escucha tus
+              resúmenes cuando lo necesites.
+            </p>
+          </div>
+        </div>
+        <div class="overview__stickers" aria-hidden="true">
+          <span class="sticker sticker--pulse">Modo foco adaptable</span>
+          <span class="sticker sticker--accent">Recordatorios amables</span>
+          <span class="sticker sticker--outline">Audio + resúmenes 360°</span>
+        </div>
+        <div class="overview__metrics" role="list" aria-label="Indicadores de progreso">
+          <article class="metric" role="listitem">
+            <span class="metric__label">Tareas completadas</span>
+            <strong class="metric__value">12</strong>
+            <span class="metric__hint">6 h de enfoque</span>
+          </article>
+          <article class="metric" role="listitem">
+            <span class="metric__label">Hábitos activos</span>
+            <strong class="metric__value">4</strong>
+            <span class="metric__hint">8 días en racha</span>
+          </article>
+          <article class="metric" role="listitem">
+            <span class="metric__label">Recordatorios próximos</span>
+            <strong class="metric__value">3</strong>
+            <span class="metric__hint">Notificaciones programadas</span>
+          </article>
+        </div>
+      </header>
+
+      <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
+        <button type="button" class="tab-bar__button is-active" role="tab">Planificador</button>
+        <button type="button" class="tab-bar__button" role="tab">Recordatorios</button>
+        <button type="button" class="tab-bar__button" role="tab">Resúmenes</button>
+      </nav>
+
+      <main class="tab-panels">
+        <div class="preview-tab">
+          <span class="preview-tab__label">Planificador</span>
+          <section class="tab-panel" aria-labelledby="tab-plan">
+          <div class="panel-grid panel-grid--planner">
+            <section
+              class="panel panel--with-sticker"
+              aria-labelledby="tasks-heading"
+              data-sticker="Plan maestro"
+              data-icon="🗒️"
+            >
+              <header class="panel__header">
+                <div>
+                  <h2 id="tasks-heading" class="panel__title">Plan diario</h2>
+                  <p class="panel__subtitle">Añade tareas y controla tu avance sin sobrecarga visual.</p>
+                </div>
+              </header>
+              <div class="list" role="list">
+                <article class="list-item" role="listitem">
+                  <div class="list-item__body">
+                    <span class="list-item__title">Ensayo de inclusión educativa</span>
+                    <span class="list-item__meta">Pedagogía · 12/05/2025 10:00</span>
+                    <span class="list-item__meta">Divide la redacción en párrafos cortos para mantener el foco.</span>
+                  </div>
+                  <div class="list-item__actions">
+                    <span class="status-pill status-pill--pending">pendiente</span>
+                    <button type="button" class="ghost-button">Marcar completada</button>
+                  </div>
+                </article>
+                <article class="list-item" role="listitem">
+                  <div class="list-item__body">
+                    <span class="list-item__title">Quiz de neurodiversidad</span>
+                    <span class="list-item__meta">Psicología · 13/05/2025 08:30</span>
+                  </div>
+                  <div class="list-item__actions">
+                    <span class="status-pill status-pill--in_progress">en progreso</span>
+                    <button type="button" class="ghost-button">Marcar completada</button>
+                  </div>
+                </article>
+                <article class="list-item" role="listitem">
+                  <div class="list-item__body">
+                    <span class="list-item__title">Foro colaborativo</span>
+                    <span class="list-item__meta">Comunicación · 14/05/2025 23:59</span>
+                  </div>
+                  <div class="list-item__actions">
+                    <span class="status-pill status-pill--completed">completada</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <div class="panel-grid__column">
+              <section
+                class="panel panel--with-sticker"
+                aria-labelledby="focus-heading"
+                data-sticker="Ritmo pomodoro"
+                data-icon="⏱️"
+              >
+                <header class="panel__header">
+                  <div>
+                    <h2 id="focus-heading" class="panel__title">Ritmo Pomodoro</h2>
+                    <p class="panel__subtitle">Elige cuánto quieres enfocarte. Puedes pausar cuando lo necesites.</p>
+                  </div>
+                </header>
+                <div class="timer" role="group" aria-label="Temporizador de enfoque">
+                  <div class="timer__display" aria-live="polite">
+                    <span class="timer__time">24:15</span>
+                  </div>
+                  <div class="timer__presets" role="group" aria-label="Duraciones sugeridas">
+                    <button type="button" class="pill is-active">25 min</button>
+                    <button type="button" class="pill">15 min</button>
+                    <button type="button" class="pill">45 min</button>
+                  </div>
+                  <label for="preview-custom-duration" class="timer__label">Duración personalizada (5-90 min)</label>
+                  <input id="preview-custom-duration" type="number" min="5" max="90" value="25" />
+                  <div class="timer__actions">
+                    <button type="button" class="primary">Pausar</button>
+                    <button type="button" class="ghost-button">Reiniciar</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel panel--support" aria-labelledby="quick-actions-heading">
+                <header class="panel__header panel__header--compact">
+                  <div>
+                    <h2 id="quick-actions-heading" class="panel__title">Atajos interactivos</h2>
+                    <p class="panel__subtitle">
+                      Envía una idea directamente al gestor de resúmenes o inspírate con rituales de enfoque.
+                    </p>
+                  </div>
+                  <span class="panel__badge" aria-hidden="true">✨</span>
+                </header>
+                <div class="quick-actions" role="list">
+                  <button type="button" class="quick-action" role="listitem">
+                    Generar resumen para repasar neurodivergencia
+                  </button>
+                  <button type="button" class="quick-action" role="listitem">
+                    Crear guion de estudio con técnica Pomodoro
+                  </button>
+                  <button type="button" class="quick-action" role="listitem">
+                    Recordatorio amable para entregar proyecto inclusivo
+                  </button>
+                </div>
+                <p class="quick-actions__hint">
+                  Puedes ajustar el texto antes de generar el resumen o iniciar una sesión de foco.
+                </p>
+              </section>
+            </div>
+          </div>
+          </section>
+        </div>
+
+        <div class="preview-tab">
+          <span class="preview-tab__label">Recordatorios</span>
+          <section
+            class="panel panel--with-sticker"
+            aria-labelledby="tab-reminders"
+            data-sticker="Alertas suaves"
+            data-icon="🔔"
+          >
+          <header class="panel__header panel__header--split">
+            <div>
+              <h2 class="panel__title">Recordatorios programados</h2>
+              <p class="panel__subtitle">
+                Visualiza tus notificaciones por orden cronológico y mantén claros los próximos hitos.
+              </p>
+            </div>
+            <div class="panel__callout" aria-live="polite">
+              <span class="panel__callout-label">Próximo aviso</span>
+              <strong class="panel__callout-value">09:00</strong>
+            </div>
+          </header>
+          <div class="reminder-grid">
+            <div class="reminder-grid__list" role="list" aria-label="Lista de recordatorios programados">
+              <article class="list-item" role="listitem">
+                <div class="list-item__body">
+                  <span class="list-item__title">Entrega de ensayo</span>
+                  <span class="list-item__meta">12/05/2025 09:00</span>
+                  <span class="list-item__meta">Enviar versión final a la profesora.</span>
+                </div>
+                <div class="list-item__actions">
+                  <span class="pill pill--outline">Notificación</span>
+                </div>
+              </article>
+              <article class="list-item" role="listitem">
+                <div class="list-item__body">
+                  <span class="list-item__title">Sesión con tutor de apoyo</span>
+                  <span class="list-item__meta">13/05/2025 16:30</span>
+                  <span class="list-item__meta">Confirmar ejercicios con el tutor antes de la sesión.</span>
+                </div>
+                <div class="list-item__actions">
+                  <span class="pill pill--outline">Notificación</span>
+                </div>
+              </article>
+              <article class="list-item" role="listitem">
+                <div class="list-item__body">
+                  <span class="list-item__title">Entrega de proyecto inclusivo</span>
+                  <span class="list-item__meta">15/05/2025 12:00</span>
+                </div>
+                <div class="list-item__actions">
+                  <span class="pill pill--outline">Notificación</span>
+                </div>
+              </article>
+            </div>
+            <aside class="reminder-grid__aside" aria-label="Sugerencias para tus recordatorios">
+              <h3 class="reminder-aside__title">Agenda visual</h3>
+              <p class="reminder-aside__text">
+                Agrupa los recordatorios por materias y añade descripciones breves. El tablero organiza cada uno de forma automática
+                para evitar saturación.
+              </p>
+              <ul class="reminder-aside__tips">
+                <li>Usa horarios similares para crear rutinas reconocibles.</li>
+                <li>Configura avisos dobles cuando la entrega sea crítica.</li>
+                <li>Apóyate en la pestaña de resúmenes para preparar materiales.</li>
+              </ul>
+            </aside>
+          </div>
+          </section>
+        </div>
+
+        <div class="preview-tab">
+          <span class="preview-tab__label">Gestor de resúmenes</span>
+          <section
+            class="panel panel--with-sticker"
+            aria-labelledby="tab-summary"
+            data-sticker="Resúmenes hápticos"
+            data-icon="🔊"
+          >
+          <header class="panel__header">
+            <div>
+              <h2 class="panel__title">Gestor de resúmenes</h2>
+              <p class="panel__subtitle">
+                Sube documentos PDF, Word, PowerPoint o TXT, o pega tu texto para escucharlo en voz clara.
+              </p>
+            </div>
+          </header>
+          <div class="summary">
+            <form class="summary__form">
+              <label for="preview-summary-text" class="summary__label">Texto o notas</label>
+              <textarea id="preview-summary-text" rows="6">
+La neurodiversidad reconoce que cada mente aprende con ritmos distintos y que la inclusión se diseña desde la empatía. CogniCore acompaña a las personas con TDAH ofreciendo pasos pequeños, notificaciones amables y resúmenes con voz natural.
+              </textarea>
+              <label for="preview-summary-sentences" class="summary__label">Longitud del resumen: 4 frases</label>
+              <input id="preview-summary-sentences" type="range" min="1" max="8" value="4" />
+              <div class="summary__upload">
+                <span class="summary__label">Subir archivo</span>
+                <input
+                  id="preview-summary-file"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.pptx,.txt"
+                  class="summary__file-input"
+                />
+                <label
+                  for="preview-summary-file"
+                  class="summary__upload-sticker"
+                  role="button"
+                  tabindex="0"
+                  onkeydown="if (event.key==='Enter'||event.key===' ') { event.preventDefault(); event.currentTarget.previousElementSibling.click(); }"
+                >
+                  <span class="summary__upload-icon" aria-hidden="true">📡</span>
+                  <span class="summary__upload-copy">
+                    <span class="summary__upload-title">Cargar archivo holográfico</span>
+                    <span class="summary__upload-subtitle">PDF, Word, PPTX o TXT futuristas</span>
+                  </span>
+                </label>
+              </div>
+              <p class="summary__hint">Formatos compatibles: PDF, DOCX, PPTX, TXT.</p>
+              <div class="summary-actions">
+                <button type="button" class="primary">Generar resumen</button>
+                <button type="button" class="ghost-button">Escuchar resumen</button>
+                <button type="button" class="ghost-button">Escuchar texto completo</button>
+                <button type="button" class="ghost-button">Detener voz</button>
+              </div>
+            </form>
+            <div class="summary__result">
+              <h3 class="summary__result-title">Resumen generado</h3>
+              <p class="summary__paragraph">
+                CogniCore reúne planificación, recordatorios y lectura en voz alta para reducir la sobrecarga cognitiva. Sus pestañas separan tareas, recordatorios y resúmenes para acompañar a estudiantes neurodivergentes.
+              </p>
+              <div class="chip-grid" aria-label="Palabras clave destacadas">
+                <span class="chip">neurodiversidad</span>
+                <span class="chip">acompañamiento</span>
+                <span class="chip">voz natural</span>
+                <span class="chip">planificador</span>
+              </div>
+            </div>
+          </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
