@@ -2,6 +2,12 @@ import React, { useMemo } from 'react'
 
 const WEEKDAY_LABELS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
+const readableStatus = {
+  completed: 'Completada',
+  pending: 'Pendiente',
+  in_progress: 'En progreso'
+}
+
 const normalizeDate = (date) => {
   const cloned = new Date(date)
   cloned.setHours(0, 0, 0, 0)
@@ -17,7 +23,21 @@ const getStartOfWeek = (date) => {
   return target
 }
 
-const WeeklyCalendar = ({ tasks = [] }) => {
+const toMinutes = (timeValue) => {
+  if (!timeValue && timeValue !== 0) return null
+  const parts = String(timeValue).split(':')
+  const [hours, minutes] = [Number(parts[0] || 0), Number(parts[1] || 0)]
+  return hours * 60 + minutes
+}
+
+const formatRange = (start, end) => {
+  if (!start) return 'Sin hora'
+  const startLabel = String(start).slice(0, 5)
+  if (!end) return startLabel
+  return `${startLabel} – ${String(end).slice(0, 5)}`
+}
+
+const WeeklyCalendar = ({ scheduleEntries = [], tasks = [] }) => {
   const { weekDays, eventsByDay } = useMemo(() => {
     const today = new Date()
     const startOfWeek = getStartOfWeek(today)
@@ -27,36 +47,56 @@ const WeeklyCalendar = ({ tasks = [] }) => {
       return date
     })
 
-    const grouped = days.map((day) => {
-      const sameDayTasks = tasks.filter((task) => {
-        if (!task.due_date) return false
-        const dueDate = new Date(task.due_date)
-        if (Number.isNaN(dueDate.getTime())) return false
-        return normalizeDate(dueDate).getTime() === day.getTime()
-      })
+    const grouped = days.map((_, index) => {
+      const scheduleForDay = scheduleEntries
+        .filter((entry) => entry.day_of_week === index)
+        .map((entry) => ({
+          id: `schedule-${entry.id}`,
+          title: entry.title,
+          meta: entry.location,
+          notes: entry.description,
+          range: formatRange(entry.start_time, entry.end_time),
+          sortOrder: toMinutes(entry.start_time),
+          variant: 'schedule'
+        }))
 
-      return sameDayTasks
-        .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+      const taskEvents = tasks
+        .filter((task) => {
+          if (!task.due_date) return false
+          const dueDate = new Date(task.due_date)
+          if (Number.isNaN(dueDate.getTime())) return false
+          const taskIndex = (dueDate.getDay() + 6) % 7
+          return taskIndex === index
+        })
         .map((task) => {
           const dueDate = new Date(task.due_date)
-          const time = Number.isNaN(dueDate.getTime())
+          const timeLabel = Number.isNaN(dueDate.getTime())
             ? 'Sin hora'
             : dueDate.toLocaleTimeString('es-ES', {
                 hour: '2-digit',
                 minute: '2-digit'
               })
           return {
-            id: task.id,
+            id: `task-${task.id}`,
             title: task.title,
-            course: task.course,
-            time,
+            meta: task.course,
+            notes: task.notes,
+            range: timeLabel,
+            sortOrder: toMinutes(`${dueDate.getHours()}:${dueDate.getMinutes()}`),
+            variant: 'task',
             status: task.status
           }
         })
+
+      return [...scheduleForDay, ...taskEvents].sort((a, b) => {
+        const aOrder = a.sortOrder ?? Number.POSITIVE_INFINITY
+        const bOrder = b.sortOrder ?? Number.POSITIVE_INFINITY
+        return aOrder - bOrder
+      })
     })
 
     return { weekDays: days, eventsByDay: grouped }
-  }, [tasks])
+  }, [scheduleEntries, tasks])
 
   return (
     <section
@@ -93,17 +133,23 @@ const WeeklyCalendar = ({ tasks = [] }) => {
           {eventsByDay.map((events, dayIndex) => (
             <div key={WEEKDAY_LABELS[dayIndex]} className="calendar__column" role="gridcell">
               {events.length === 0 ? (
-                <p className="calendar__empty">Sin tareas programadas</p>
+                <p className="calendar__empty">Sin actividades planificadas</p>
               ) : (
                 events.map((event) => (
                   <article
                     key={event.id}
-                    className={`calendar-event calendar-event--${event.status || 'pending'}`}
-                    aria-label={`${event.title} a las ${event.time}`}
+                    className={`calendar-event calendar-event--${event.variant}${
+                      event.variant === 'task' && event.status ? ` calendar-event--task-${event.status}` : ''
+                    }`}
+                    aria-label={`${event.title} ${event.range}`}
                   >
-                    <span className="calendar-event__time">{event.time}</span>
+                    <span className="calendar-event__time">{event.range}</span>
                     <span className="calendar-event__title">{event.title}</span>
-                    {event.course && <span className="calendar-event__meta">{event.course}</span>}
+                    {event.meta && <span className="calendar-event__meta">{event.meta}</span>}
+                    {event.variant === 'task' && event.status && (
+                      <span className="calendar-event__pill">{readableStatus[event.status] || 'Pendiente'}</span>
+                    )}
+                    {event.notes && <span className="calendar-event__notes">{event.notes}</span>}
                   </article>
                 ))
               )}

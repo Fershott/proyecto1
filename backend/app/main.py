@@ -8,6 +8,7 @@ from .models import (
     DashboardStats,
     FocusSession,
     Reminder,
+    ScheduleEntry,
     SummaryRequest,
     SummaryResponse,
     Task,
@@ -17,10 +18,12 @@ from .storage import (
     compute_dashboard_stats,
     load_focus_sessions,
     load_reminders,
+    load_schedule,
     load_tasks,
     next_id,
     save_focus_sessions,
     save_reminders,
+    save_schedule,
     save_stats,
     save_tasks,
 )
@@ -109,6 +112,32 @@ def delete_reminder(reminder_id: int) -> None:
     if len(updated) == len(reminders):
         raise HTTPException(status_code=404, detail="Recordatorio no encontrado")
     save_reminders(updated)
+
+
+@app.get("/schedule", response_model=list[ScheduleEntry])
+def list_schedule() -> list[ScheduleEntry]:
+    return load_schedule()
+
+
+@app.post("/schedule", response_model=ScheduleEntry, status_code=201)
+def create_schedule_entry(entry: ScheduleEntry) -> ScheduleEntry:
+    if entry.end_time <= entry.start_time:
+        raise HTTPException(status_code=400, detail="La hora de término debe ser posterior al inicio.")
+
+    entries = load_schedule()
+    entry.id = next_id(entries)
+    entries.append(entry)
+    save_schedule(entries)
+    return entry
+
+
+@app.delete("/schedule/{entry_id}", status_code=204)
+def delete_schedule_entry(entry_id: int) -> None:
+    entries = load_schedule()
+    updated = [entry for entry in entries if entry.id != entry_id]
+    if len(entries) == len(updated):
+        raise HTTPException(status_code=404, detail="Horario no encontrado")
+    save_schedule(updated)
 
 
 @app.get("/focus-sessions", response_model=list[FocusSession])

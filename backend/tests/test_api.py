@@ -139,7 +139,14 @@ def naive_utc() -> datetime:
 
 
 from backend.app import main, storage
-from backend.app.models import DashboardStats, FocusSession, Reminder, Task, TaskStatus
+from backend.app.models import (
+    DashboardStats,
+    FocusSession,
+    Reminder,
+    ScheduleEntry,
+    Task,
+    TaskStatus,
+)
 
 
 @pytest.fixture()
@@ -149,11 +156,13 @@ def patched_storage(tmp_path, monkeypatch):
     tasks_file = tmp_path / "tasks.json"
     reminders_file = tmp_path / "reminders.json"
     focus_file = tmp_path / "focus_sessions.json"
+    schedule_file = tmp_path / "schedule.json"
     stats_file = tmp_path / "stats.json"
 
     monkeypatch.setattr(storage, "TASKS_FILE", tasks_file)
     monkeypatch.setattr(storage, "REMINDERS_FILE", reminders_file)
     monkeypatch.setattr(storage, "FOCUS_FILE", focus_file)
+    monkeypatch.setattr(storage, "SCHEDULE_FILE", schedule_file)
     monkeypatch.setattr(storage, "STATS_FILE", stats_file)
 
     return storage
@@ -226,6 +235,45 @@ def test_reminder_flow(patched_storage):
 
     with pytest.raises(HTTPException) as excinfo:
         main.delete_reminder(1)
+    assert excinfo.value.status_code == 404
+
+
+def test_schedule_flow(patched_storage):
+    created = main.create_schedule_entry(
+        ScheduleEntry(
+            id=0,
+            title="Laboratorio de química",
+            day_of_week=1,
+            start_time=datetime.strptime("09:00", "%H:%M").time(),
+            end_time=datetime.strptime("10:30", "%H:%M").time(),
+            location="Sala 302",
+            description="Recordar bata y gafas",
+        )
+    )
+
+    assert created.id == 1
+    assert created.day_of_week == 1
+
+    all_entries = main.list_schedule()
+    assert len(all_entries) == 1
+
+    with pytest.raises(HTTPException) as excinfo:
+        main.create_schedule_entry(
+            ScheduleEntry(
+                id=0,
+                title="Clase inválida",
+                day_of_week=2,
+                start_time=datetime.strptime("11:00", "%H:%M").time(),
+                end_time=datetime.strptime("10:30", "%H:%M").time(),
+            )
+        )
+    assert excinfo.value.status_code == 400
+
+    main.delete_schedule_entry(created.id)
+    assert main.list_schedule() == []
+
+    with pytest.raises(HTTPException) as excinfo:
+        main.delete_schedule_entry(created.id)
     assert excinfo.value.status_code == 404
 
 

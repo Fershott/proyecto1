@@ -1,9 +1,16 @@
 import json
-from datetime import datetime
+from datetime import datetime, time
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
-from .models import DashboardStats, FocusSession, Reminder, Task, TaskStatus
+from .models import (
+    DashboardStats,
+    FocusSession,
+    Reminder,
+    ScheduleEntry,
+    Task,
+    TaskStatus,
+)
 
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -12,6 +19,7 @@ DATA_DIR.mkdir(exist_ok=True)
 TASKS_FILE = DATA_DIR / "tasks.json"
 REMINDERS_FILE = DATA_DIR / "reminders.json"
 FOCUS_FILE = DATA_DIR / "focus_sessions.json"
+SCHEDULE_FILE = DATA_DIR / "schedule.json"
 STATS_FILE = DATA_DIR / "stats.json"
 
 
@@ -45,6 +53,26 @@ def save_tasks(tasks: List[Task]) -> None:
             data["due_date"] = task.due_date.isoformat()
         payload.append(data)
     _write_json(TASKS_FILE, payload)
+
+
+def load_schedule() -> List[ScheduleEntry]:
+    raw = _read_json(SCHEDULE_FILE, [])
+    entries: List[ScheduleEntry] = []
+    for item in raw:
+        item["start_time"] = time.fromisoformat(item["start_time"])
+        item["end_time"] = time.fromisoformat(item["end_time"])
+        entries.append(ScheduleEntry(**item))
+    return entries
+
+
+def save_schedule(entries: List[ScheduleEntry]) -> None:
+    payload = []
+    for entry in entries:
+        data = entry.dict()
+        data["start_time"] = entry.start_time.isoformat()
+        data["end_time"] = entry.end_time.isoformat()
+        payload.append(data)
+    _write_json(SCHEDULE_FILE, payload)
 
 
 def load_reminders() -> List[Reminder]:

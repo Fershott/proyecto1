@@ -15,6 +15,7 @@ const SummaryAssistant = ({
   const [sentences, setSentences] = useState(5)
   const [selectedFile, setSelectedFile] = useState(null)
   const [selectedFileName, setSelectedFileName] = useState('')
+  const [activeResultTab, setActiveResultTab] = useState('summary')
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -25,6 +26,14 @@ const SummaryAssistant = ({
       onPresetConsumed?.()
     }
   }, [presetText, onPresetConsumed])
+
+  useEffect(() => {
+    if (summary) {
+      setActiveResultTab('summary')
+    } else if (originalText) {
+      setActiveResultTab('original')
+    }
+  }, [summary, originalText])
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -168,10 +177,37 @@ const SummaryAssistant = ({
             </button>
           </div>
         </form>
-        {summary && (
+        {(summary || originalText) && (
           <div className="summary__result">
-            <h3 className="summary__result-title">Resumen generado</h3>
-            <p className="summary__paragraph">{summary}</p>
+            <div className="summary__result-header">
+              <h3 className="summary__result-title">Resultados del asistente</h3>
+              <div className="summary__result-tabs" role="tablist" aria-label="Contenido del resumen">
+                {summary && (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeResultTab === 'summary'}
+                    className={`summary__result-tab ${activeResultTab === 'summary' ? 'is-active' : ''}`}
+                    id="summary-result-tab"
+                    onClick={() => setActiveResultTab('summary')}
+                  >
+                    Resumen
+                  </button>
+                )}
+                {originalText && (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeResultTab === 'original'}
+                    className={`summary__result-tab ${activeResultTab === 'original' ? 'is-active' : ''}`}
+                    id="summary-original-tab"
+                    onClick={() => setActiveResultTab('original')}
+                  >
+                    Texto completo
+                  </button>
+                )}
+              </div>
+            </div>
             {keywords?.length > 0 && (
               <div className="chip-grid" aria-label="Palabras clave destacadas">
                 {keywords.map((keyword) => (
@@ -179,6 +215,26 @@ const SummaryAssistant = ({
                     {keyword}
                   </span>
                 ))}
+              </div>
+            )}
+            {activeResultTab === 'summary' && summary && (
+              <div
+                id="summary-result-panel"
+                role="tabpanel"
+                aria-labelledby="summary-result-tab"
+                className="summary__result-panel"
+              >
+                <p className="summary__paragraph">{summary}</p>
+              </div>
+            )}
+            {activeResultTab === 'original' && originalText && (
+              <div
+                id="summary-original-panel"
+                role="tabpanel"
+                aria-labelledby="summary-original-tab"
+                className="summary__result-panel summary__result-panel--original"
+              >
+                <p className="summary__paragraph summary__paragraph--scrollable">{originalText}</p>
               </div>
             )}
           </div>

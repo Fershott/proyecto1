@@ -15,6 +15,7 @@ backend/
       tasks.json
       reminders.json
       focus_sessions.json
+      schedule.json
       stats.json
   requirements.txt
 frontend/
@@ -28,6 +29,7 @@ frontend/
       HeaderGreeting.jsx
       TaskList.jsx
       ReminderList.jsx
+      SchedulePlanner.jsx
       SummaryAssistant.jsx
       FocusTimer.jsx
       QuickNotes.jsx
@@ -135,8 +137,9 @@ recordatorios, resúmenes y un tablero de ideas rápidas.
 ## Funcionalidades principales
 
 - **Pestañas por flujo**: tareas, Pomodoro, calendario semanal, recordatorios, resúmenes e ideas rápidas para evitar sobrecarga.
+- **Organizador semanal estilo Outlook** para crear, listar y eliminar bloques de horario estudiantil junto a las tareas con fecha.
 - **Gestión de tareas y recordatorios** con datos persistidos en archivos JSON y actualizaciones en tiempo real.
-- **Generador de resúmenes** a partir de texto pegado o archivos PDF/DOCX/PPTX/TXT.
+- **Generador de resúmenes** a partir de texto pegado o archivos PDF/DOCX/PPTX/TXT, con pestañas para leer el resumen y el texto original completo.
 - **Palabras clave destacadas** para ayudar a la memorización.
 - **Temporizador de enfoque** con notificación al completar la sesión.
 - **Lectura en voz alta** usando la API de síntesis de voz del navegador.
@@ -152,6 +155,7 @@ recordatorios, resúmenes y un tablero de ideas rápidas.
 
 - `GET /tasks`, `POST /tasks`, `PATCH /tasks/{id}/status`
 - `GET /reminders`, `POST /reminders`
+- `GET /schedule`, `POST /schedule`, `DELETE /schedule/{id}`
 - `GET /focus-sessions`, `POST /focus-sessions`
 - `POST /summary` (archivo o texto)
 - `POST /summary/text` (solo texto)

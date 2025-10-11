@@ -215,12 +215,77 @@
             >
               <header class="panel__header">
                 <div>
-                  <h2 id="calendar-heading" class="panel__title">Calendario semanal</h2>
+                  <h2 id="calendar-heading" class="panel__title">Organizador semanal</h2>
                   <p class="panel__subtitle">
-                    Visualiza tu semana como en Outlook: distribuye tareas por día y detecta espacios libres.
+                    Añade tus clases, tutorías y actividades recurrentes y visualízalas junto a las tareas pendientes.
                   </p>
                 </div>
               </header>
+              <div class="schedule-grid">
+                <form class="schedule-form">
+                  <div class="schedule-form__grid">
+                    <label class="schedule-form__label schedule-form__label--wide" for="preview-schedule-title">
+                      <span>Actividad</span>
+                      <input id="preview-schedule-title" type="text" placeholder="Laboratorio de química" />
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-day">
+                      <span>Día</span>
+                      <select id="preview-schedule-day">
+                        <option>Lunes</option>
+                        <option>Martes</option>
+                        <option selected>Miércoles</option>
+                        <option>Jueves</option>
+                        <option>Viernes</option>
+                        <option>Sábado</option>
+                        <option>Domingo</option>
+                      </select>
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-start">
+                      <span>Inicio</span>
+                      <input id="preview-schedule-start" type="time" value="15:00" />
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-end">
+                      <span>Fin</span>
+                      <input id="preview-schedule-end" type="time" value="16:30" />
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-location">
+                      <span>Ubicación (opcional)</span>
+                      <input id="preview-schedule-location" type="text" placeholder="Sala 302" />
+                    </label>
+                    <label class="schedule-form__label schedule-form__label--wide" for="preview-schedule-notes">
+                      <span>Notas (opcional)</span>
+                      <textarea id="preview-schedule-notes" rows="3" placeholder="Recordar bata y gafas"></textarea>
+                    </label>
+                  </div>
+                  <div class="schedule-form__footer">
+                    <span class="schedule-form__error" role="alert">Completa la información para guardar tu bloque.</span>
+                    <button type="button" class="schedule-form__submit">Guardar en el calendario</button>
+                  </div>
+                </form>
+                <aside class="schedule-sidebar" aria-label="Horario registrado">
+                  <h3 class="schedule-sidebar__title">Bloques agendados</h3>
+                  <ul class="schedule-sidebar__list">
+                    <li class="schedule-sidebar__item">
+                      <div>
+                        <p class="schedule-sidebar__headline">Clases de programación</p>
+                        <p class="schedule-sidebar__meta">Lunes · 08:30 – 10:00</p>
+                        <p class="schedule-sidebar__meta">Aula virtual</p>
+                        <p class="schedule-sidebar__notes">Revisar apuntes previos del módulo.</p>
+                      </div>
+                      <button type="button" class="ghost-button schedule-sidebar__delete">Quitar</button>
+                    </li>
+                    <li class="schedule-sidebar__item">
+                      <div>
+                        <p class="schedule-sidebar__headline">Tutoría de neurociencia</p>
+                        <p class="schedule-sidebar__meta">Jueves · 15:00 – 16:00</p>
+                        <p class="schedule-sidebar__meta">Laboratorio 4</p>
+                        <p class="schedule-sidebar__notes">Preparar preguntas clave para la sesión.</p>
+                      </div>
+                      <button type="button" class="ghost-button schedule-sidebar__delete">Quitar</button>
+                    </li>
+                  </ul>
+                </aside>
+              </div>
               <div class="calendar" role="grid" aria-label="Calendario semanal tipo Outlook">
                 <div class="calendar__head" role="row">
                   <div class="calendar__head-cell" role="columnheader">
@@ -254,45 +319,56 @@
                 </div>
                 <div class="calendar__body" role="rowgroup">
                   <div class="calendar__column" role="gridcell">
-                    <article class="calendar-event calendar-event--pending">
-                      <span class="calendar-event__time">10:00</span>
-                      <span class="calendar-event__title">Ensayo inclusión educativa</span>
+                    <article class="calendar-event calendar-event--schedule">
+                      <span class="calendar-event__time">08:30 – 10:00</span>
+                      <span class="calendar-event__title">Clases de programación</span>
+                      <span class="calendar-event__meta">Aula virtual</span>
+                      <span class="calendar-event__notes">Repasar algoritmos básicos.</span>
+                    </article>
+                    <article class="calendar-event calendar-event--task-pending">
+                      <span class="calendar-event__time">17:30</span>
+                      <span class="calendar-event__title">Entrega bitácora UX</span>
+                      <span class="calendar-event__meta">Diseño interactivo</span>
+                      <span class="calendar-event__pill">Pendiente</span>
+                    </article>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <p class="calendar__empty">Añade tu clase o tarea</p>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <article class="calendar-event calendar-event--schedule">
+                      <span class="calendar-event__time">11:00 – 12:30</span>
+                      <span class="calendar-event__title">Club de lectura accesible</span>
+                      <span class="calendar-event__meta">Biblioteca central</span>
+                    </article>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <article class="calendar-event calendar-event--schedule">
+                      <span class="calendar-event__time">15:00 – 16:00</span>
+                      <span class="calendar-event__title">Tutoría de neurociencia</span>
+                      <span class="calendar-event__meta">Laboratorio 4</span>
+                      <span class="calendar-event__notes">Recordar preguntas y audios de apoyo.</span>
+                    </article>
+                    <article class="calendar-event calendar-event--task-in_progress">
+                      <span class="calendar-event__time">19:00</span>
+                      <span class="calendar-event__title">Preparar presentación de biología</span>
+                      <span class="calendar-event__meta">Biología celular</span>
+                      <span class="calendar-event__pill">En progreso</span>
+                    </article>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <article class="calendar-event calendar-event--task-completed">
+                      <span class="calendar-event__time">08:00</span>
+                      <span class="calendar-event__title">Resumen lectura inclusiva</span>
                       <span class="calendar-event__meta">Pedagogía</span>
+                      <span class="calendar-event__pill">Completada</span>
                     </article>
                   </div>
                   <div class="calendar__column" role="gridcell">
-                    <article class="calendar-event calendar-event--in_progress">
-                      <span class="calendar-event__time">08:30</span>
-                      <span class="calendar-event__title">Quiz neurodiversidad</span>
-                      <span class="calendar-event__meta">Psicología</span>
-                    </article>
+                    <p class="calendar__empty">Fin de semana libre</p>
                   </div>
                   <div class="calendar__column" role="gridcell">
-                    <article class="calendar-event calendar-event--pending">
-                      <span class="calendar-event__time">18:00</span>
-                      <span class="calendar-event__title">Reunión equipo foro colaborativo</span>
-                      <span class="calendar-event__meta">Comunicación</span>
-                    </article>
-                  </div>
-                  <div class="calendar__column" role="gridcell">
-                    <p class="calendar__empty">Sin tareas programadas</p>
-                  </div>
-                  <div class="calendar__column" role="gridcell">
-                    <article class="calendar-event calendar-event--pending">
-                      <span class="calendar-event__time">12:30</span>
-                      <span class="calendar-event__title">Revisión informe de laboratorio</span>
-                      <span class="calendar-event__meta">Biología</span>
-                    </article>
-                  </div>
-                  <div class="calendar__column" role="gridcell">
-                    <p class="calendar__empty">Sin tareas programadas</p>
-                  </div>
-                  <div class="calendar__column" role="gridcell">
-                    <article class="calendar-event calendar-event--completed">
-                      <span class="calendar-event__time">09:00</span>
-                      <span class="calendar-event__title">Descanso y repaso ligero</span>
-                      <span class="calendar-event__meta">Bienestar</span>
-                    </article>
+                    <p class="calendar__empty">Planifica un descanso</p>
                   </div>
                 </div>
               </div>
@@ -444,15 +520,36 @@
                   </div>
                 </form>
                 <div class="summary__result">
-                  <h3 class="summary__result-title">Resumen generado</h3>
-                  <p class="summary__paragraph">
-                    El capítulo repasa los pilares de la educación inclusiva, destacando la planificación anticipada, el
-                    acompañamiento individual y el diseño de actividades multisensoriales para promover la participación.
-                  </p>
+                  <div class="summary__result-header">
+                    <h3 class="summary__result-title">Resultados del asistente</h3>
+                    <div class="summary__result-tabs" role="tablist" aria-label="Contenido del resumen">
+                      <button type="button" class="summary__result-tab is-active" role="tab" aria-selected="true">
+                        Resumen
+                      </button>
+                      <button type="button" class="summary__result-tab" role="tab" aria-selected="false">
+                        Texto completo
+                      </button>
+                    </div>
+                  </div>
                   <div class="chip-grid" aria-label="Palabras clave destacadas">
                     <span class="chip">Educación inclusiva</span>
                     <span class="chip">Apoyos</span>
                     <span class="chip">Participación</span>
+                  </div>
+                  <div class="summary__result-panel" role="tabpanel" aria-label="Resumen generado">
+                    <p class="summary__paragraph">
+                      El capítulo repasa los pilares de la educación inclusiva, destacando la planificación anticipada, el
+                      acompañamiento individual y el diseño de actividades multisensoriales para promover la participación.
+                    </p>
+                  </div>
+                  <div class="summary__result-panel summary__result-panel--original" role="tabpanel" aria-label="Texto completo">
+                    <p class="summary__paragraph summary__paragraph--scrollable">
+                      La educación inclusiva propone planificar con antelación los materiales y apoyos para cada estudiante.
+                      El texto explica cómo equilibrar descansos, recursos auditivos y visuales y seguimiento docente para
+                      sostener la atención. También ofrece ejemplos de rúbricas accesibles y recomendaciones para presentar
+                      la información con lenguaje claro, apoyos visuales y narraciones en audio para distintos estilos de
+                      aprendizaje.
+                    </p>
                   </div>
                 </div>
               </div>

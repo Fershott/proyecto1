@@ -5,7 +5,7 @@ import ReminderList from './components/ReminderList'
 import SummaryAssistant from './components/SummaryAssistant'
 import FocusTimer from './components/FocusTimer'
 import QuickNotes from './components/QuickNotes'
-import WeeklyCalendar from './components/WeeklyCalendar'
+import SchedulePlanner from './components/SchedulePlanner'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -28,6 +28,7 @@ const App = () => {
     streak_days: 0
   })
   const [tasks, setTasks] = useState([])
+  const [scheduleEntries, setScheduleEntries] = useState([])
   const [reminders, setReminders] = useState([])
   const [summary, setSummary] = useState('')
   const [originalText, setOriginalText] = useState('')
@@ -38,14 +39,16 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsResponse, tasksResponse, remindersResponse] = await Promise.all([
+        const [statsResponse, tasksResponse, remindersResponse, scheduleResponse] = await Promise.all([
           fetch(`${API_URL}/dashboard`).then((res) => res.json()),
           fetch(`${API_URL}/tasks`).then((res) => res.json()),
-          fetch(`${API_URL}/reminders`).then((res) => res.json())
+          fetch(`${API_URL}/reminders`).then((res) => res.json()),
+          fetch(`${API_URL}/schedule`).then((res) => res.json())
         ])
         setStats(statsResponse)
         setTasks(tasksResponse)
         setReminders(remindersResponse)
+        setScheduleEntries(scheduleResponse)
       } catch (error) {
         console.error('Error cargando datos', error)
       }
@@ -167,6 +170,60 @@ const App = () => {
     setPresetSummaryText('')
   }, [])
 
+  const handleAddScheduleEntry = useCallback(
+    async ({ title, day_of_week, start_time, end_time, location, description }) => {
+      try {
+        const response = await fetch(`${API_URL}/schedule`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: 0,
+            title,
+            day_of_week,
+            start_time,
+            end_time,
+            location,
+            description
+          })
+        })
+
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data?.detail || 'No se pudo registrar el horario. Intenta nuevamente.')
+        }
+
+        setScheduleEntries((prev) => [...prev, data])
+        setActiveTab('calendar')
+        return data
+      } catch (error) {
+        console.error('Error guardando horario', error)
+        alert(error.message || 'Ocurrió un problema al guardar el bloque de horario.')
+        return null
+      }
+    },
+    []
+  )
+
+  const handleDeleteScheduleEntry = useCallback(async (entryId) => {
+    try {
+      const response = await fetch(`${API_URL}/schedule/${entryId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data?.detail || 'No se pudo eliminar el bloque del horario.')
+      }
+
+      setScheduleEntries((prev) => prev.filter((entry) => entry.id !== entryId))
+    } catch (error) {
+      console.error('Error eliminando horario', error)
+      alert(error.message || 'No se pudo eliminar el bloque seleccionado.')
+    }
+  }, [])
+
   return (
     <div className="app-shell">
       <HeaderGreeting stats={stats} />
@@ -212,7 +269,12 @@ const App = () => {
           hidden={activeTab !== 'calendar'}
           className="tab-panel"
         >
-          <WeeklyCalendar tasks={tasks} />
+          <SchedulePlanner
+            schedule={scheduleEntries}
+            tasks={tasks}
+            onAdd={handleAddScheduleEntry}
+            onDelete={handleDeleteScheduleEntry}
+          />
         </section>
         <section
           id="panel-reminders"

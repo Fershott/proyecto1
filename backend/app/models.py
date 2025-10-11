@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from enum import Enum
 from typing import List, Optional
 
@@ -33,6 +33,16 @@ class Task(BaseModel):
     status: TaskStatus = TaskStatus.PENDING
     notes: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
+
+
+class ScheduleEntry(BaseModel):
+    id: int
+    title: str
+    day_of_week: int = Field(ge=0, le=6)
+    start_time: time
+    end_time: time
+    location: Optional[str] = None
+    description: Optional[str] = None
 
 
 class FocusSession(BaseModel):
