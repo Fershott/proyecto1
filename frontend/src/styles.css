@@ -1059,13 +1059,15 @@ textarea {
   gap: 4px;
 }
 
+
 .calendar__head-day {
   font-weight: 700;
   color: var(--accent-strong);
+  font-size: clamp(0.85rem, 0.6vw + 0.75rem, 1rem);
 }
 
 .calendar__head-date {
-  font-size: 13px;
+  font-size: clamp(0.7rem, 0.5vw + 0.55rem, 0.85rem);
   color: var(--text-muted);
   text-transform: uppercase;
 }
@@ -1085,6 +1087,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .calendar__empty {
@@ -1104,6 +1107,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .calendar-event--schedule {
@@ -1112,7 +1116,7 @@ textarea {
 }
 
 .calendar-event__time {
-  font-size: 12px;
+  font-size: clamp(0.7rem, 0.45vw + 0.5rem, 0.85rem);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
@@ -1121,16 +1125,23 @@ textarea {
 .calendar-event__title {
   font-weight: 700;
   color: #1f2937;
+  font-size: clamp(0.85rem, 0.7vw + 0.6rem, 1rem);
+  line-height: 1.25;
+  word-break: break-word;
 }
 
 .calendar-event__meta {
-  font-size: 13px;
+  font-size: clamp(0.75rem, 0.55vw + 0.55rem, 0.9rem);
   color: var(--accent-strong);
+  line-height: 1.2;
+  word-break: break-word;
 }
 
 .calendar-event__notes {
-  font-size: 12px;
+  font-size: clamp(0.7rem, 0.5vw + 0.55rem, 0.85rem);
   color: #475569;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .calendar-event__pill {
