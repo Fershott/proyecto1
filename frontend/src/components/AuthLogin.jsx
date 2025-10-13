@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 const PROVIDER_DETAILS = {
   google: {
@@ -15,12 +15,21 @@ const PROVIDER_DETAILS = {
   }
 }
 
-const AuthLogin = ({ apiUrl, onLogin }) => {
+const AuthLogin = ({ apiUrl, onLogin, onContinue, onLogout, profile }) => {
   const [selectedProvider, setSelectedProvider] = useState(null)
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!profile) {
+      setSelectedProvider(null)
+      setEmail('')
+      setName('')
+      setError('')
+    }
+  }, [profile])
 
   const provider = useMemo(() => {
     if (!selectedProvider) {
@@ -73,6 +82,48 @@ const AuthLogin = ({ apiUrl, onLogin }) => {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (profile) {
+    return (
+      <div className="auth-shell">
+        <div className="auth-card auth-card--signed-in" role="region" aria-labelledby="auth-title">
+          <div className="auth-card__header">
+            <div className="auth-logo" aria-hidden="true">
+              CC
+            </div>
+            <div>
+              <p className="auth-eyebrow">Sesión activa</p>
+              <h1 id="auth-title" className="auth-title">
+                ¡Hola, {profile.name || profile.email}!
+              </h1>
+              <p className="auth-subtitle">
+                Ya tienes acceso a tu tablero organizado. Puedes seguir navegando por las pestañas o cambiar de cuenta
+                cuando lo necesites.
+              </p>
+            </div>
+          </div>
+          <div className="auth-session-actions" role="group" aria-label="Acciones rápidas de sesión">
+            <button type="button" className="auth-submit" onClick={onContinue}>
+              Ir al dashboard
+            </button>
+            <button type="button" className="auth-change auth-change--logout" onClick={onLogout}>
+              Cerrar sesión
+            </button>
+          </div>
+          <dl className="auth-session-meta">
+            <div>
+              <dt>Proveedor conectado</dt>
+              <dd>{profile.provider === 'google' ? 'Google (Gmail)' : 'Microsoft (Outlook)'}</dd>
+            </div>
+            <div>
+              <dt>Correo utilizado</dt>
+              <dd>{profile.email}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    )
   }
 
   return (

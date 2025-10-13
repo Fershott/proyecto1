@@ -274,6 +274,10 @@ const App = () => {
     setActiveTab('tasks')
   }, [])
 
+  const handleContinueToDashboard = useCallback(() => {
+    setActiveTab('tasks')
+  }, [])
+
   const resetCollections = useCallback(() => {
     setStats({
       tasks_completed: 0,
@@ -323,7 +327,9 @@ const App = () => {
             type="button"
             role="tab"
             id={`tab-${tab.id}`}
-            className={`tab-bar__button ${activeTab === tab.id ? 'is-active' : ''}`}
+            className={`tab-bar__button ${tab.id === 'login' ? 'tab-bar__button--login' : ''} ${
+              activeTab === tab.id ? 'is-active' : ''
+            }`}
             aria-selected={activeTab === tab.id}
             aria-controls={`panel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
@@ -342,7 +348,13 @@ const App = () => {
           hidden={activeTab !== 'login'}
           className="tab-panel tab-panel--login"
         >
-          <AuthLogin apiUrl={API_URL} onLogin={handleLogin} />
+          <AuthLogin
+            apiUrl={API_URL}
+            profile={profile}
+            onLogin={handleLogin}
+            onContinue={handleContinueToDashboard}
+            onLogout={handleLogout}
+          />
         </section>
         {profile && (
           <>

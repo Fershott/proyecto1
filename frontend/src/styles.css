@@ -324,12 +324,35 @@ textarea {
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
+  position: relative;
+}
+
+.tab-bar__button--login {
+  color: #312e81;
+  font-weight: 700;
+}
+
+.tab-bar__button--login::before {
+  content: '';
+  position: absolute;
+  inset: 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(79, 70, 229, 0.18), rgba(236, 72, 153, 0.16));
+  opacity: 0;
+  transition: opacity 160ms ease;
+  z-index: -1;
 }
 
 .tab-bar__button.is-active {
   background: var(--accent);
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(79, 70, 229, 0.25);
+}
+
+.tab-bar__button--login.is-active::before,
+.tab-bar__button--login:hover::before,
+.tab-bar__button--login:focus-visible::before {
+  opacity: 1;
 }
 
 .tab-bar__button:not(.is-active):hover {
@@ -1293,6 +1316,12 @@ textarea {
   gap: 32px;
 }
 
+.auth-card--signed-in {
+  gap: 24px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  box-shadow: 0 20px 44px rgba(79, 70, 229, 0.15);
+}
+
 .auth-card__header {
   display: flex;
   gap: 20px;
@@ -1410,6 +1439,54 @@ textarea {
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
+}
+
+.auth-change--logout {
+  align-self: auto;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #1e293b;
+  padding: 12px 24px;
+  text-decoration: none;
+}
+
+.auth-change--logout:hover,
+.auth-change--logout:focus-visible {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.auth-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.auth-session-meta {
+  display: grid;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.7), rgba(238, 242, 255, 0.7));
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.auth-session-meta div {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-session-meta dt {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(30, 64, 175, 0.75);
+  margin: 0;
+}
+
+.auth-session-meta dd {
+  margin: 0;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .auth-field {

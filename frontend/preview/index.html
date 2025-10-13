@@ -154,8 +154,8 @@
       </header>
 
       <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
-        <button type="button" class="tab-bar__button" role="tab" disabled>Iniciar sesión</button>
-        <button type="button" class="tab-bar__button is-active" role="tab">Tareas</button>
+        <button type="button" class="tab-bar__button tab-bar__button--login is-active" role="tab">Iniciar sesión</button>
+        <button type="button" class="tab-bar__button" role="tab">Tareas</button>
         <button type="button" class="tab-bar__button" role="tab">Pomodoro</button>
         <button type="button" class="tab-bar__button" role="tab">Calendario</button>
         <button type="button" class="tab-bar__button" role="tab">Recordatorios</button>
@@ -194,6 +194,30 @@
                       <small>Sincroniza recordatorios con Outlook y Teams.</small>
                     </span>
                   </button>
+                </div>
+                <div class="auth-card auth-card--signed-in" aria-live="polite">
+                  <div class="auth-card__header">
+                    <div class="auth-logo" aria-hidden="true">CC</div>
+                    <div>
+                      <p class="auth-eyebrow">Sesión activa</p>
+                      <h3 class="auth-title">¡Hola, Ana!</h3>
+                      <p class="auth-subtitle">Tu cuenta estudiantil ya está conectada. Continúa hacia el dashboard o cambia de cuenta cuando quieras.</p>
+                    </div>
+                  </div>
+                  <div class="auth-session-actions" role="group" aria-label="Acciones rápidas de sesión">
+                    <button type="button" class="auth-submit">Ir al dashboard</button>
+                    <button type="button" class="auth-change auth-change--logout">Cerrar sesión</button>
+                  </div>
+                  <dl class="auth-session-meta">
+                    <div>
+                      <dt>Proveedor conectado</dt>
+                      <dd>Google (Gmail)</dd>
+                    </div>
+                    <div>
+                      <dt>Correo utilizado</dt>
+                      <dd>ana.torres@gmail.com</dd>
+                    </div>
+                  </dl>
                 </div>
               </div>
             </div>
