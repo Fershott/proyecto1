@@ -139,16 +139,7 @@ def naive_utc() -> datetime:
 
 
 from backend.app import main, storage
-from backend.app.models import (
-    AuthProvider,
-    AuthRequest,
-    DashboardStats,
-    FocusSession,
-    Reminder,
-    ScheduleEntry,
-    Task,
-    TaskStatus,
-)
+from backend.app.models import DashboardStats, FocusSession, Reminder, ScheduleEntry, Task, TaskStatus
 
 
 @pytest.fixture()
@@ -160,44 +151,18 @@ def patched_storage(tmp_path, monkeypatch):
     focus_file = tmp_path / "focus_sessions.json"
     schedule_file = tmp_path / "schedule.json"
     stats_file = tmp_path / "stats.json"
-    auth_file = tmp_path / "auth_session.json"
 
     monkeypatch.setattr(storage, "TASKS_FILE", tasks_file)
     monkeypatch.setattr(storage, "REMINDERS_FILE", reminders_file)
     monkeypatch.setattr(storage, "FOCUS_FILE", focus_file)
     monkeypatch.setattr(storage, "SCHEDULE_FILE", schedule_file)
     monkeypatch.setattr(storage, "STATS_FILE", stats_file)
-    monkeypatch.setattr(storage, "AUTH_FILE", auth_file)
 
     return storage
 
 
 def test_health_check():
     assert main.health_check() == {"status": "ok"}
-
-
-def test_auth_flow(patched_storage):
-    assert main.current_session() is None
-
-    request = AuthRequest(provider=AuthProvider.GOOGLE, email="alumna@gmail.com", name="Alumna")
-    session = main.login(request)
-    assert session.provider == AuthProvider.GOOGLE
-    assert session.email == "alumna@gmail.com"
-    assert session.name == "Alumna"
-
-    stored = main.current_session()
-    assert stored is not None
-    assert stored.email == "alumna@gmail.com"
-
-    main.logout()
-    assert main.current_session() is None
-
-
-def test_auth_rejects_invalid_domain(patched_storage):
-    with pytest.raises(HTTPException) as excinfo:
-        main.login(AuthRequest(provider=AuthProvider.MICROSOFT, email="ana@gmail.com"))
-
-    assert excinfo.value.status_code == 400
 
 
 def test_task_crud_flow(patched_storage):

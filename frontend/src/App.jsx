@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import HeaderGreeting from './components/HeaderGreeting'
 import TaskList from './components/TaskList'
 import ReminderList from './components/ReminderList'
@@ -6,13 +6,10 @@ import SummaryAssistant from './components/SummaryAssistant'
 import FocusTimer from './components/FocusTimer'
 import QuickNotes from './components/QuickNotes'
 import SchedulePlanner from './components/SchedulePlanner'
-import AuthLogin from './components/AuthLogin'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-const LOGIN_TAB = { id: 'login', label: 'Iniciar sesión' }
-
-const DASHBOARD_TABS = [
+const TABS = [
   { id: 'tasks', label: 'Tareas' },
   { id: 'timer', label: 'Pomodoro' },
   { id: 'calendar', label: 'Calendario' },
@@ -22,9 +19,7 @@ const DASHBOARD_TABS = [
 ]
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState('login')
-  const [profile, setProfile] = useState(null)
-  const [loadingSession, setLoadingSession] = useState(true)
+  const [activeTab, setActiveTab] = useState('tasks')
   const [stats, setStats] = useState({
     tasks_completed: 0,
     focus_hours: 0,
@@ -42,31 +37,6 @@ const App = () => {
   const [presetSummaryText, setPresetSummaryText] = useState('')
 
   useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const response = await fetch(`${API_URL}/auth/session`)
-        if (!response.ok) {
-          throw new Error('No se pudo verificar la sesión.')
-        }
-        const data = await response.json()
-        if (data) {
-          setProfile(data)
-        }
-      } catch (error) {
-        console.warn('Sesión no disponible', error)
-      } finally {
-        setLoadingSession(false)
-      }
-    }
-
-    fetchSession()
-  }, [])
-
-  useEffect(() => {
-    if (!profile) {
-      return
-    }
-
     const fetchData = async () => {
       try {
         const [statsResponse, tasksResponse, remindersResponse, scheduleResponse] = await Promise.all([
@@ -85,22 +55,7 @@ const App = () => {
     }
 
     fetchData()
-  }, [profile])
-
-  useEffect(() => {
-    if (profile) {
-      setActiveTab((prev) => (prev === 'login' ? 'tasks' : prev))
-    } else {
-      setActiveTab('login')
-    }
-  }, [profile])
-
-  const tabs = useMemo(() => {
-    if (!profile) {
-      return [LOGIN_TAB]
-    }
-    return [LOGIN_TAB, ...DASHBOARD_TABS]
-  }, [profile])
+  }, [])
 
   const handleMarkComplete = async (taskId) => {
     try {
@@ -269,72 +224,20 @@ const App = () => {
     }
   }, [])
 
-  const handleLogin = useCallback((session) => {
-    setProfile(session)
-    setActiveTab('tasks')
-  }, [])
-
-  const handleContinueToDashboard = useCallback(() => {
-    setActiveTab('tasks')
-  }, [])
-
-  const resetCollections = useCallback(() => {
-    setStats({
-      tasks_completed: 0,
-      focus_hours: 0,
-      milestones_completed: 0,
-      upcoming_reminders: 0,
-      streak_days: 0
-    })
-    setTasks([])
-    setReminders([])
-    setScheduleEntries([])
-    setSummary('')
-    setOriginalText('')
-    setKeywords([])
-    setPresetSummaryText('')
-    setIsSummarizing(false)
-  }, [])
-
-  const handleLogout = useCallback(async () => {
-    try {
-      await fetch(`${API_URL}/auth/session`, {
-        method: 'DELETE'
-      })
-    } catch (error) {
-      console.error('No se pudo cerrar la sesión', error)
-    } finally {
-      resetCollections()
-      setProfile(null)
-    }
-  }, [resetCollections])
-
-  if (loadingSession) {
-    return (
-      <div className="app-shell app-shell--loading">
-        <p>Cargando CogniCore...</p>
-      </div>
-    )
-  }
-
   return (
     <div className="app-shell">
-      {profile && <HeaderGreeting stats={stats} profile={profile} onLogout={handleLogout} />}
+      <HeaderGreeting stats={stats} />
       <nav className="tab-bar" role="tablist" aria-label="Secciones principales">
-        {tabs.map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             role="tab"
             id={`tab-${tab.id}`}
-            className={`tab-bar__button ${tab.id === 'login' ? 'tab-bar__button--login' : ''} ${
-              activeTab === tab.id ? 'is-active' : ''
-            }`}
+            className={`tab-bar__button ${activeTab === tab.id ? 'is-active' : ''}`}
             aria-selected={activeTab === tab.id}
             aria-controls={`panel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
-            disabled={!profile && tab.id !== 'login'}
-            aria-disabled={!profile && tab.id !== 'login'}
           >
             {tab.label}
           </button>
@@ -342,93 +245,74 @@ const App = () => {
       </nav>
       <main className="tab-panels">
         <section
-          id="panel-login"
+          id="panel-tasks"
           role="tabpanel"
-          aria-labelledby="tab-login"
-          hidden={activeTab !== 'login'}
-          className="tab-panel tab-panel--login"
+          aria-labelledby="tab-tasks"
+          hidden={activeTab !== 'tasks'}
+          className="tab-panel"
         >
-          <AuthLogin
-            apiUrl={API_URL}
-            profile={profile}
-            onLogin={handleLogin}
-            onContinue={handleContinueToDashboard}
-            onLogout={handleLogout}
+          <TaskList tasks={tasks} onMarkComplete={handleMarkComplete} />
+        </section>
+        <section
+          id="panel-timer"
+          role="tabpanel"
+          aria-labelledby="tab-timer"
+          hidden={activeTab !== 'timer'}
+          className="tab-panel"
+        >
+          <FocusTimer onSessionComplete={handleSessionComplete} />
+        </section>
+        <section
+          id="panel-calendar"
+          role="tabpanel"
+          aria-labelledby="tab-calendar"
+          hidden={activeTab !== 'calendar'}
+          className="tab-panel"
+        >
+          <SchedulePlanner
+            schedule={scheduleEntries}
+            tasks={tasks}
+            onAdd={handleAddScheduleEntry}
+            onDelete={handleDeleteScheduleEntry}
           />
         </section>
-        {profile && (
-          <>
-            <section
-              id="panel-tasks"
-              role="tabpanel"
-              aria-labelledby="tab-tasks"
-              hidden={activeTab !== 'tasks'}
-              className="tab-panel"
-            >
-              <TaskList tasks={tasks} onMarkComplete={handleMarkComplete} />
-            </section>
-            <section
-              id="panel-timer"
-              role="tabpanel"
-              aria-labelledby="tab-timer"
-              hidden={activeTab !== 'timer'}
-              className="tab-panel"
-            >
-              <FocusTimer onSessionComplete={handleSessionComplete} />
-            </section>
-            <section
-              id="panel-calendar"
-              role="tabpanel"
-              aria-labelledby="tab-calendar"
-              hidden={activeTab !== 'calendar'}
-              className="tab-panel"
-            >
-              <SchedulePlanner
-                schedule={scheduleEntries}
-                tasks={tasks}
-                onAdd={handleAddScheduleEntry}
-                onDelete={handleDeleteScheduleEntry}
-              />
-            </section>
-            <section
-              id="panel-reminders"
-              role="tabpanel"
-              aria-labelledby="tab-reminders"
-              hidden={activeTab !== 'reminders'}
-              className="tab-panel"
-            >
-              <ReminderList reminders={reminders} onAdd={handleAddReminder} />
-            </section>
-            <section
-              id="panel-summary"
-              role="tabpanel"
-              aria-labelledby="tab-summary"
-              hidden={activeTab !== 'summary'}
-              className="tab-panel"
-            >
-              <SummaryAssistant
-                onUpload={handleSummaryUpload}
-                summary={summary}
-                keywords={keywords}
-                originalText={originalText}
-                isLoading={isSummarizing}
-                onSpeak={speakText}
-                onStopSpeaking={stopSpeaking}
-                presetText={presetSummaryText}
-                onPresetConsumed={handlePresetConsumed}
-              />
-            </section>
-            <section
-              id="panel-ideas"
-              role="tabpanel"
-              aria-labelledby="tab-ideas"
-              hidden={activeTab !== 'ideas'}
-              className="tab-panel"
-            >
-              <QuickNotes onAdd={handleQuickSuggestion} />
-            </section>
-          </>
-        )}
+        <section
+          id="panel-reminders"
+          role="tabpanel"
+          aria-labelledby="tab-reminders"
+          hidden={activeTab !== 'reminders'}
+          className="tab-panel"
+        >
+          <ReminderList reminders={reminders} onAdd={handleAddReminder} />
+        </section>
+        <section
+          id="panel-summary"
+          role="tabpanel"
+          aria-labelledby="tab-summary"
+          hidden={activeTab !== 'summary'}
+          className="tab-panel"
+        >
+          <SummaryAssistant
+            onUpload={handleSummaryUpload}
+            summary={summary}
+            keywords={keywords}
+            originalText={originalText}
+            isLoading={isSummarizing}
+            onSpeak={speakText}
+            onStopSpeaking={stopSpeaking}
+            presetText={presetSummaryText}
+            onPresetConsumed={handlePresetConsumed}
+          />
+        </section>
+        <section
+          id="panel-ideas"
+          role="tabpanel"
+          aria-labelledby="tab-ideas"
+          hidden={activeTab !== 'ideas'}
+          className="tab-panel"
+        >
+          <QuickNotes onAdd={handleQuickSuggestion} />
+        </section>
       </main>
     </div>
   )

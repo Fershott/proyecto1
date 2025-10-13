@@ -5,9 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import summarizer
 from .models import (
-    AuthProvider,
-    AuthRequest,
-    AuthSession,
     DashboardStats,
     FocusSession,
     Reminder,
@@ -19,13 +16,11 @@ from .models import (
 )
 from .storage import (
     compute_dashboard_stats,
-    load_auth_session,
     load_focus_sessions,
     load_reminders,
     load_schedule,
     load_tasks,
     next_id,
-    save_auth_session,
     save_focus_sessions,
     save_reminders,
     save_schedule,
@@ -47,50 +42,6 @@ app.add_middleware(
 @app.get("/health")
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
-
-
-@app.get("/auth/session", response_model=Optional[AuthSession])
-def current_session() -> Optional[AuthSession]:
-    return load_auth_session()
-
-
-def _validate_email_for_provider(provider: AuthProvider, email: str) -> None:
-    domain = email.split("@")[-1].lower()
-    if provider == AuthProvider.GOOGLE:
-        allowed = {"gmail.com", "googlemail.com"}
-    else:
-        allowed = {"outlook.com", "hotmail.com", "live.com"}
-    if domain not in allowed:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Para conectar las notificaciones necesitas usar un correo de "
-                "Gmail u Outlook según el proveedor seleccionado."
-            ),
-        )
-
-
-@app.post("/auth/login", response_model=AuthSession, status_code=201)
-def login(request: AuthRequest) -> AuthSession:
-    email = request.email.strip().lower()
-    if "@" not in email:
-        raise HTTPException(status_code=400, detail="Debes ingresar un correo electrónico válido.")
-    _validate_email_for_provider(request.provider, email)
-
-    display_name = request.name.strip() if request.name else email.split("@")[0].title()
-    session = AuthSession(
-        id=1,
-        provider=request.provider,
-        email=email,
-        name=display_name,
-    )
-    save_auth_session(session)
-    return session
-
-
-@app.delete("/auth/session", status_code=204)
-def logout() -> None:
-    save_auth_session(None)
 
 
 @app.get("/tasks", response_model=list[Task])

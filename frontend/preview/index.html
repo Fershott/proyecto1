@@ -64,48 +64,10 @@
         background: rgba(79, 70, 229, 0.4);
       }
 
-      .preview-auth {
-        width: 540px;
-        margin: 0 auto 40px;
-      }
-
-      .preview-auth .auth-card {
-        position: relative;
-      }
     </style>
   </head>
   <body class="is-preview-desktop">
     <div class="preview-banner">Vista estática de referencia. La aplicación real cambia entre pestañas.</div>
-    <section class="preview-auth">
-      <div class="auth-card" role="presentation">
-        <div class="auth-card__header">
-          <div class="auth-logo" aria-hidden="true">CC</div>
-          <div>
-            <p class="auth-eyebrow">Bienvenido a CogniCore</p>
-            <h2 class="auth-title">Ingresa con tu correo académico</h2>
-            <p class="auth-subtitle">
-              Conecta Google o Microsoft para que los recordatorios y resúmenes lleguen directo a tu bandeja.
-            </p>
-          </div>
-        </div>
-        <div class="auth-providers" role="list">
-          <button type="button" class="auth-provider provider--google" role="listitem">
-            <span class="auth-provider__icon" aria-hidden="true">G</span>
-            <span>
-              <strong>Continuar con Google</strong>
-              <small>Sincroniza tus notificaciones en Gmail y Calendar.</small>
-            </span>
-          </button>
-          <button type="button" class="auth-provider provider--microsoft" role="listitem">
-            <span class="auth-provider__icon" aria-hidden="true">M</span>
-            <span>
-              <strong>Continuar con Microsoft</strong>
-              <small>Recibe avisos en Outlook y mantén tus horarios al día.</small>
-            </span>
-          </button>
-        </div>
-      </div>
-    </section>
     <div class="app-shell">
       <header class="overview" aria-labelledby="welcome-heading">
         <div class="overview__brand">
@@ -114,20 +76,10 @@
             <p class="overview__eyebrow">Tu agenda universitaria</p>
             <h1 id="welcome-heading" class="overview__title">CogniCore</h1>
             <p class="overview__description">
-              Hola Ana, listo para conquistar tu semana con un calendario colorido y resúmenes que puedes escuchar cuando
-              quieras.
+              Organiza tu semana con un calendario estilo Outlook, recordatorios claros y resúmenes que puedes escuchar en voz
+              alta cuando lo necesites.
             </p>
           </div>
-        </div>
-        <div class="overview__session" role="group" aria-label="Tu sesión de CogniCore">
-          <div class="overview__user">
-            <span class="overview__avatar" aria-hidden="true">A</span>
-            <div>
-              <p class="overview__user-name">Ana Torres</p>
-              <p class="overview__user-email">ana.torres@gmail.com</p>
-            </div>
-          </div>
-          <button type="button" class="overview__logout">Cerrar sesión</button>
         </div>
         <div class="overview__stickers" aria-hidden="true">
           <span class="sticker sticker--pulse">Pomodoro flexible</span>
@@ -154,8 +106,7 @@
       </header>
 
       <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
-        <button type="button" class="tab-bar__button tab-bar__button--login is-active" role="tab">Iniciar sesión</button>
-        <button type="button" class="tab-bar__button" role="tab">Tareas</button>
+        <button type="button" class="tab-bar__button is-active" role="tab">Tareas</button>
         <button type="button" class="tab-bar__button" role="tab">Pomodoro</button>
         <button type="button" class="tab-bar__button" role="tab">Calendario</button>
         <button type="button" class="tab-bar__button" role="tab">Recordatorios</button>
@@ -164,66 +115,6 @@
       </nav>
 
       <main class="tab-panels">
-        <div class="preview-tab">
-          <span class="preview-tab__label">Iniciar sesión</span>
-          <section class="tab-panel tab-panel--login" aria-labelledby="tab-login">
-            <div class="auth-shell">
-              <div class="auth-card" role="dialog" aria-labelledby="preview-auth-title">
-                <div class="auth-card__header">
-                  <div class="auth-logo" aria-hidden="true">CC</div>
-                  <div>
-                    <p class="auth-eyebrow">Bienvenido a CogniCore</p>
-                    <h2 id="preview-auth-title" class="auth-title">Tu espacio organizado empieza aquí</h2>
-                    <p class="auth-subtitle">
-                      Accede con Google o Microsoft para enviar notificaciones a tu bandeja de entrada estudiantil y mantener tus recordatorios sincronizados.
-                    </p>
-                  </div>
-                </div>
-                <div class="auth-providers" role="list">
-                  <button type="button" class="auth-provider provider--google" role="listitem">
-                    <span class="auth-provider__icon" aria-hidden="true">G</span>
-                    <span>
-                      <strong>Continuar con Google</strong>
-                      <small>Conecta tu Gmail y recibe alertas instantáneas.</small>
-                    </span>
-                  </button>
-                  <button type="button" class="auth-provider provider--microsoft" role="listitem">
-                    <span class="auth-provider__icon" aria-hidden="true">M</span>
-                    <span>
-                      <strong>Continuar con Microsoft</strong>
-                      <small>Sincroniza recordatorios con Outlook y Teams.</small>
-                    </span>
-                  </button>
-                </div>
-                <div class="auth-card auth-card--signed-in" aria-live="polite">
-                  <div class="auth-card__header">
-                    <div class="auth-logo" aria-hidden="true">CC</div>
-                    <div>
-                      <p class="auth-eyebrow">Sesión activa</p>
-                      <h3 class="auth-title">¡Hola, Ana!</h3>
-                      <p class="auth-subtitle">Tu cuenta estudiantil ya está conectada. Continúa hacia el dashboard o cambia de cuenta cuando quieras.</p>
-                    </div>
-                  </div>
-                  <div class="auth-session-actions" role="group" aria-label="Acciones rápidas de sesión">
-                    <button type="button" class="auth-submit">Ir al dashboard</button>
-                    <button type="button" class="auth-change auth-change--logout">Cerrar sesión</button>
-                  </div>
-                  <dl class="auth-session-meta">
-                    <div>
-                      <dt>Proveedor conectado</dt>
-                      <dd>Google (Gmail)</dd>
-                    </div>
-                    <div>
-                      <dt>Correo utilizado</dt>
-                      <dd>ana.torres@gmail.com</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
         <div class="preview-tab">
           <span class="preview-tab__label">Tareas</span>
           <section class="tab-panel" aria-labelledby="tab-tasks">

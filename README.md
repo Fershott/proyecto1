@@ -17,7 +17,6 @@ backend/
       focus_sessions.json
       schedule.json
       stats.json
-      auth_session.json
   requirements.txt
 frontend/
   index.html
@@ -126,11 +125,8 @@ npm install
 npm run dev
 ```
 
-La interfaz se servirá en `http://localhost:5173`. El proxy de desarrollo redirige las peticiones `/api` hacia el backend.
-
-Al ingresar por primera vez verás la pantalla de inicio de sesión de CogniCore. Selecciona **Google** o **Microsoft**, escribe un
-nombre opcional y utiliza un correo con dominio `@gmail.com`, `@googlemail.com`, `@outlook.com`, `@hotmail.com` o `@live.com`. El
-backend valida el dominio para garantizar que las notificaciones se puedan entregar en Gmail u Outlook.
+La interfaz se servirá en `http://localhost:5173`. El proxy de desarrollo redirige las peticiones `/api` hacia el backend. El 
+dashboard abre directamente en la pestaña de **Tareas**, listo para consultar métricas, pomodoros, calendario y recordatorios sin pasos adicionales.
 
 ### Vista previa estática del diseño estudiantil
 
@@ -148,7 +144,6 @@ recordatorios, resúmenes y un tablero de ideas rápidas.
 - **Palabras clave destacadas** para ayudar a la memorización.
 - **Temporizador de enfoque** con notificación al completar la sesión.
 - **Lectura en voz alta** usando la API de síntesis de voz del navegador.
-- **Inicio de sesión con Google o Microsoft** para asociar recordatorios y resúmenes al correo del estudiante.
 - **Interfaz colorida e inclusiva**, con lenguaje amable, jerarquía visual clara y accesibilidad básica.
 
 ## Notas sobre accesibilidad
@@ -159,7 +154,6 @@ recordatorios, resúmenes y un tablero de ideas rápidas.
 
 ## Endpoints relevantes
 
-- `GET /auth/session`, `POST /auth/login`, `DELETE /auth/session`
 - `GET /tasks`, `POST /tasks`, `PATCH /tasks/{id}/status`
 - `GET /reminders`, `POST /reminders`
 - `GET /schedule`, `POST /schedule`, `DELETE /schedule/{id}`

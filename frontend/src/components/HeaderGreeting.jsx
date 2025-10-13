@@ -1,9 +1,6 @@
 import React from 'react'
 
-const HeaderGreeting = ({ stats, profile, onLogout }) => {
-  const displayName = profile?.name || profile?.email || 'estudiante'
-  const secondaryLabel = profile?.name ? profile.email : 'Cuenta conectada'
-
+const HeaderGreeting = ({ stats }) => {
   return (
     <header className="overview" aria-labelledby="welcome-heading">
       <div className="overview__brand">
@@ -16,24 +13,10 @@ const HeaderGreeting = ({ stats, profile, onLogout }) => {
             CogniCore
           </h1>
           <p className="overview__description">
-            Hola {displayName}, listo para conquistar tu semana con un calendario colorido y resúmenes que puedes escuchar cuando
-            quieras.
+            Organiza tu semana con un calendario estilo Outlook, recordatorios claros y resúmenes que puedes escuchar en voz alta
+            cuando lo necesites.
           </p>
         </div>
-      </div>
-      <div className="overview__session" role="group" aria-label="Tu sesión de CogniCore">
-        <div className="overview__user">
-          <span className="overview__avatar" aria-hidden="true">
-            {(profile?.name || profile?.email || 'C')[0].toUpperCase()}
-          </span>
-          <div>
-            <p className="overview__user-name">{displayName}</p>
-            <p className="overview__user-email">{secondaryLabel}</p>
-          </div>
-        </div>
-        <button type="button" className="overview__logout" onClick={onLogout}>
-          Cerrar sesión
-        </button>
       </div>
       <div className="overview__stickers" aria-hidden="true">
         <span className="sticker sticker--pulse">Pomodoro flexible</span>
