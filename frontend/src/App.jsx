@@ -38,16 +38,20 @@ const FALLBACK_TASKS = [
   {
     id: 101,
     title: 'Redactar resumen de neurociencia',
-    description: 'Integrar apuntes de clase y lecturas del capítulo 4.',
-    due_date: '2024-04-03',
-    status: 'pending'
+    course: 'Neurociencia aplicada',
+    due_date: '2024-04-03T15:00:00',
+    status: 'pending',
+    notes: 'Integrar apuntes de clase y lecturas del capítulo 4.',
+    tags: ['lectura', 'estrategias']
   },
   {
     id: 102,
     title: 'Preparar exposición de historia del arte',
-    description: 'Seleccionar referencias visuales para la presentación.',
-    due_date: '2024-04-05',
-    status: 'in_progress'
+    course: 'Historia del arte moderno',
+    due_date: '2024-04-05T09:30:00',
+    status: 'in_progress',
+    notes: 'Seleccionar referencias visuales para la presentación.',
+    tags: ['presentación']
   }
 ]
 
@@ -58,7 +62,7 @@ const FALLBACK_REMINDERS = [
     description: 'Subir a plataforma antes de las 23:59.',
     remind_at: '2024-04-02T18:00:00',
     type: 'deadline',
-    provider: 'google'
+    delivery_provider: 'google'
   },
   {
     id: 202,
@@ -66,7 +70,7 @@ const FALLBACK_REMINDERS = [
     description: 'Videollamada para definir entregables.',
     remind_at: '2024-04-04T16:30:00',
     type: 'meeting',
-    provider: 'google'
+    delivery_provider: 'google'
   }
 ]
 
@@ -74,7 +78,7 @@ const FALLBACK_SCHEDULE = [
   {
     id: 301,
     title: 'Clase de Programación',
-    day_of_week: 'martes',
+    day_of_week: 1,
     start_time: '10:00',
     end_time: '12:00',
     location: 'Lab 2',
@@ -83,7 +87,7 @@ const FALLBACK_SCHEDULE = [
   {
     id: 302,
     title: 'Tutoría de Neuropsicología',
-    day_of_week: 'jueves',
+    day_of_week: 3,
     start_time: '14:00',
     end_time: '15:30',
     location: 'Sala 5',
@@ -298,7 +302,7 @@ const App = () => {
           description,
           remind_at: remindAt,
           type,
-          provider: session.provider
+          delivery_provider: session.provider
         }
         setReminders((prev) => [...prev, newReminder])
         setStats((prev) => ({
