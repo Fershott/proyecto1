@@ -84,6 +84,14 @@ puedes hacerlo con:
 ./tools/run_full_checks.py --skip-update-helper
 ```
 
+Si también quieres abrir rápidamente la maqueta estática después de las pruebas, ejecuta el asistente combinado:
+
+```bash
+./tools/run_preview_and_checks.py
+```
+
+El script lanzará las mismas comprobaciones automáticas y, al finalizar, te indicará la ruta exacta del archivo `frontend/preview/index.html` para que puedas revisar el diseño de CogniCore en tu navegador.
+
 ### Automatizar la actualización de ramas
 
 Si quieres ejecutar todos los pasos de sincronización con un solo comando, utiliza el asistente incluido en `tools/update_branch.py`:
