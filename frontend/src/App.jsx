@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import HeaderGreeting from './components/HeaderGreeting'
 import TaskList from './components/TaskList'
 import ReminderList from './components/ReminderList'
@@ -18,6 +18,87 @@ const DEFAULT_STATS = {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+const FALLBACK_SESSION = {
+  id: 0,
+  email: 'demo.student@cognicore.edu',
+  display_name: 'Demo Estudiante',
+  provider: 'google',
+  isMock: true
+}
+
+const FALLBACK_STATS = {
+  tasks_completed: 8,
+  focus_hours: 12,
+  milestones_completed: 3,
+  upcoming_reminders: 4,
+  streak_days: 5
+}
+
+const FALLBACK_TASKS = [
+  {
+    id: 101,
+    title: 'Redactar resumen de neurociencia',
+    description: 'Integrar apuntes de clase y lecturas del capítulo 4.',
+    due_date: '2024-04-03',
+    status: 'pending'
+  },
+  {
+    id: 102,
+    title: 'Preparar exposición de historia del arte',
+    description: 'Seleccionar referencias visuales para la presentación.',
+    due_date: '2024-04-05',
+    status: 'in_progress'
+  }
+]
+
+const FALLBACK_REMINDERS = [
+  {
+    id: 201,
+    title: 'Entrega de ensayo de literatura',
+    description: 'Subir a plataforma antes de las 23:59.',
+    remind_at: '2024-04-02T18:00:00',
+    type: 'deadline',
+    provider: 'google'
+  },
+  {
+    id: 202,
+    title: 'Reunión de equipo de proyecto',
+    description: 'Videollamada para definir entregables.',
+    remind_at: '2024-04-04T16:30:00',
+    type: 'meeting',
+    provider: 'google'
+  }
+]
+
+const FALLBACK_SCHEDULE = [
+  {
+    id: 301,
+    title: 'Clase de Programación',
+    day_of_week: 'martes',
+    start_time: '10:00',
+    end_time: '12:00',
+    location: 'Lab 2',
+    description: 'Algoritmos aplicados a accesibilidad.'
+  },
+  {
+    id: 302,
+    title: 'Tutoría de Neuropsicología',
+    day_of_week: 'jueves',
+    start_time: '14:00',
+    end_time: '15:30',
+    location: 'Sala 5',
+    description: 'Revisión de estrategias para TDAH.'
+  }
+]
+
+const FALLBACK_SUMMARY =
+  'CogniCore detectó los puntos clave del documento y propone un plan de estudio en bloques cortos con descansos activos para mantener la concentración.'
+
+const FALLBACK_ORIGINAL_TEXT =
+  'Este es un documento de ejemplo para mostrar cómo CogniCore sintetiza la información y sugiere estrategias de estudio accesibles cuando el backend no está disponible.'
+
+const FALLBACK_KEYWORDS = ['concentración', 'bloques cortos', 'estrategias accesibles']
+
 const TABS = [
   { id: 'login', label: 'Acceso' },
   { id: 'tasks', label: 'Tareas' },
@@ -32,6 +113,8 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('login')
   const [session, setSession] = useState(null)
   const [isSessionLoading, setIsSessionLoading] = useState(true)
+  const [isBackendReachable, setIsBackendReachable] = useState(true)
+  const [isOfflineMode, setIsOfflineMode] = useState(false)
   const [stats, setStats] = useState(() => ({ ...DEFAULT_STATS }))
   const [tasks, setTasks] = useState([])
   const [scheduleEntries, setScheduleEntries] = useState([])
@@ -41,6 +124,29 @@ const App = () => {
   const [keywords, setKeywords] = useState([])
   const [isSummarizing, setIsSummarizing] = useState(false)
   const [presetSummaryText, setPresetSummaryText] = useState('')
+
+  const fallbackData = useMemo(
+    () => ({
+      session: FALLBACK_SESSION,
+      stats: FALLBACK_STATS,
+      tasks: FALLBACK_TASKS,
+      reminders: FALLBACK_REMINDERS,
+      schedule: FALLBACK_SCHEDULE
+    }),
+    []
+  )
+
+  const applyFallbackData = useCallback(() => {
+    setIsOfflineMode(true)
+    setSession({ ...fallbackData.session })
+    setStats({ ...fallbackData.stats })
+    setTasks([...fallbackData.tasks])
+    setReminders([...fallbackData.reminders])
+    setScheduleEntries([...fallbackData.schedule])
+    setSummary(FALLBACK_SUMMARY)
+    setOriginalText(FALLBACK_ORIGINAL_TEXT)
+    setKeywords([...FALLBACK_KEYWORDS])
+  }, [fallbackData])
 
   const resetCollections = useCallback(() => {
     setStats({ ...DEFAULT_STATS })
@@ -58,22 +164,28 @@ const App = () => {
       try {
         const response = await fetch(`${API_URL}/session`)
         if (!response.ok) {
+          setIsBackendReachable(true)
           return
         }
         const data = await response.json()
         if (data) {
+          setIsBackendReachable(true)
+          setIsOfflineMode(false)
           setSession(data)
           setActiveTab('tasks')
         }
       } catch (error) {
         console.error('No se pudo obtener la sesión', error)
+        setIsBackendReachable(false)
+        applyFallbackData()
+        setActiveTab('tasks')
       } finally {
         setIsSessionLoading(false)
       }
     }
 
     fetchSession()
-  }, [])
+  }, [applyFallbackData])
 
   useEffect(() => {
     if (!session) {
@@ -81,6 +193,10 @@ const App = () => {
       if (!isSessionLoading) {
         setActiveTab('login')
       }
+      return
+    }
+
+    if (isOfflineMode || session?.isMock) {
       return
     }
 
@@ -98,13 +214,25 @@ const App = () => {
         setScheduleEntries(scheduleResponse)
       } catch (error) {
         console.error('Error cargando datos', error)
+        setIsBackendReachable(false)
+        applyFallbackData()
       }
     }
 
     fetchData()
-  }, [session, isSessionLoading, resetCollections])
+  }, [session, isSessionLoading, resetCollections, isOfflineMode, applyFallbackData])
 
   const handleMarkComplete = async (taskId) => {
+    if (isOfflineMode) {
+      setTasks((prev) =>
+        prev.map((task) => (task.id === taskId ? { ...task, status: 'completed' } : task))
+      )
+      setStats((prev) => ({
+        ...prev,
+        tasks_completed: prev.tasks_completed + 1
+      }))
+      return
+    }
     try {
       const updatedTask = await fetch(`${API_URL}/tasks/${taskId}/status?status=completed`, {
         method: 'PATCH'
@@ -121,6 +249,14 @@ const App = () => {
 
   const handleSummaryUpload = async (payload) => {
     setIsSummarizing(true)
+    if (isOfflineMode) {
+      setSummary(FALLBACK_SUMMARY)
+      setKeywords(FALLBACK_KEYWORDS)
+      setOriginalText(FALLBACK_ORIGINAL_TEXT)
+      setActiveTab('summary')
+      setIsSummarizing(false)
+      return
+    }
     try {
       const response = await fetch(`${API_URL}/summary`, {
         method: 'POST',
@@ -141,7 +277,9 @@ const App = () => {
       setActiveTab('summary')
     } catch (error) {
       console.error('Error generando resumen', error)
-      alert('Ocurrió un problema al generar el resumen. Revisa tu conexión e inténtalo otra vez.')
+      setIsBackendReachable(false)
+      setIsOfflineMode(true)
+      alert('Ocurrió un problema al generar el resumen. Activamos el modo demostración para que puedas seguir trabajando mientras reconectas el backend.')
     } finally {
       setIsSummarizing(false)
     }
@@ -152,6 +290,22 @@ const App = () => {
       if (!session) {
         alert('Inicia sesión con Google o Microsoft para agendar recordatorios.')
         return null
+      }
+      if (isOfflineMode) {
+        const newReminder = {
+          id: Date.now(),
+          title,
+          description,
+          remind_at: remindAt,
+          type,
+          provider: session.provider
+        }
+        setReminders((prev) => [...prev, newReminder])
+        setStats((prev) => ({
+          ...prev,
+          upcoming_reminders: prev.upcoming_reminders + 1
+        }))
+        return newReminder
       }
       try {
         const response = await fetch(`${API_URL}/reminders`, {
@@ -185,7 +339,7 @@ const App = () => {
         return null
       }
     },
-    [setReminders, setStats]
+    [session, isOfflineMode, setReminders, setStats]
   )
 
   const speakText = useCallback((text) => {
@@ -209,6 +363,17 @@ const App = () => {
 
   const handleLogin = useCallback(
     async ({ email, provider }) => {
+      if (!isBackendReachable) {
+        setIsOfflineMode(true)
+        setSession({ ...fallbackData.session, email, provider })
+        setStats({ ...fallbackData.stats })
+        setTasks([...fallbackData.tasks])
+        setReminders([...fallbackData.reminders])
+        setScheduleEntries([...fallbackData.schedule])
+        setActiveTab('tasks')
+        return { success: true }
+      }
+
       try {
         const displayName = email.split('@')[0].replace(/\./g, ' ')
         const response = await fetch(`${API_URL}/session`, {
@@ -228,18 +393,29 @@ const App = () => {
           return { success: false, error: data?.detail || 'No se pudo iniciar sesión.' }
         }
 
+        setIsOfflineMode(false)
         setSession(data)
         setActiveTab('tasks')
         return { success: true }
       } catch (error) {
         console.error('Error al iniciar sesión', error)
+        setIsBackendReachable(false)
         return { success: false, error: 'Ocurrió un problema al iniciar sesión.' }
       }
     },
-    []
+    [fallbackData, isBackendReachable]
   )
 
   const handleLogout = useCallback(async () => {
+    if (!isBackendReachable || isOfflineMode) {
+      stopSpeaking()
+      setSession(null)
+      setIsOfflineMode(false)
+      resetCollections()
+      setActiveTab('login')
+      return
+    }
+
     try {
       await fetch(`${API_URL}/session`, {
         method: 'DELETE'
@@ -250,7 +426,7 @@ const App = () => {
       stopSpeaking()
       setSession(null)
     }
-  }, [stopSpeaking])
+  }, [isBackendReachable, isOfflineMode, resetCollections, stopSpeaking])
 
   const handleSessionComplete = useCallback(() => {
     alert('¡Excelente! Tu sesión de enfoque ha terminado.')
@@ -267,6 +443,21 @@ const App = () => {
 
   const handleAddScheduleEntry = useCallback(
     async ({ title, day_of_week, start_time, end_time, location, description }) => {
+      if (isOfflineMode) {
+        const newEntry = {
+          id: Date.now(),
+          title,
+          day_of_week,
+          start_time,
+          end_time,
+          location,
+          description
+        }
+        setScheduleEntries((prev) => [...prev, newEntry])
+        setActiveTab('calendar')
+        return newEntry
+      }
+
       try {
         const response = await fetch(`${API_URL}/schedule`, {
           method: 'POST',
@@ -298,26 +489,34 @@ const App = () => {
         return null
       }
     },
-    []
+    [isOfflineMode]
   )
 
-  const handleDeleteScheduleEntry = useCallback(async (entryId) => {
-    try {
-      const response = await fetch(`${API_URL}/schedule/${entryId}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data?.detail || 'No se pudo eliminar el bloque del horario.')
+  const handleDeleteScheduleEntry = useCallback(
+    async (entryId) => {
+      if (isOfflineMode) {
+        setScheduleEntries((prev) => prev.filter((entry) => entry.id !== entryId))
+        return
       }
 
-      setScheduleEntries((prev) => prev.filter((entry) => entry.id !== entryId))
-    } catch (error) {
-      console.error('Error eliminando horario', error)
-      alert(error.message || 'No se pudo eliminar el bloque seleccionado.')
-    }
-  }, [])
+      try {
+        const response = await fetch(`${API_URL}/schedule/${entryId}`, {
+          method: 'DELETE'
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data?.detail || 'No se pudo eliminar el bloque del horario.')
+        }
+
+        setScheduleEntries((prev) => prev.filter((entry) => entry.id !== entryId))
+      } catch (error) {
+        console.error('Error eliminando horario', error)
+        alert(error.message || 'No se pudo eliminar el bloque seleccionado.')
+      }
+    },
+    [isOfflineMode]
+  )
 
   return (
     <div className="app-shell">
@@ -355,7 +554,14 @@ const App = () => {
           hidden={activeTab !== 'login'}
           className="tab-panel"
         >
-          <AuthGateway session={session} onLogin={handleLogin} onLogout={handleLogout} isLoading={isSessionLoading} />
+          <AuthGateway
+            session={session}
+            onLogin={handleLogin}
+            onLogout={handleLogout}
+            isLoading={isSessionLoading}
+            isOfflineMode={isOfflineMode}
+            isBackendReachable={isBackendReachable}
+          />
         </section>
         <section
           id="panel-tasks"

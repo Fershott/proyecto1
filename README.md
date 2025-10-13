@@ -154,6 +154,8 @@ npm run dev
 La interfaz se servirá en `http://localhost:5173`. El proxy de desarrollo redirige las peticiones `/api` hacia el backend. La
 aplicación abre en la pestaña de **Acceso**, donde debes iniciar sesión con Google o Microsoft para que los recordatorios se sincronicen con tu correo. Una vez autenticado, se habilitan las pestañas de tareas, pomodoro, calendario, recordatorios y resúmenes.
 
+> **¿Y si el backend no responde?** CogniCore detecta la desconexión y activa un modo de demostración accesible que mantiene visible el diseño completo. Podrás explorar las pestañas, crear recordatorios y horarios a nivel local y generar un resumen de ejemplo mientras restableces el servidor.
+
 ### Vista previa estática del diseño estudiantil
 
 Si solo necesitas revisar la propuesta visual sin compilar la app de React, abre el archivo
@@ -164,7 +166,7 @@ dedicadas a tareas, Pomodoro, calendario semanal, recordatorios, resúmenes y un
 ## Funcionalidades principales
 
 - **Pestañas por flujo**: tareas, Pomodoro, calendario semanal, recordatorios, resúmenes e ideas rápidas para evitar sobrecarga.
-- **Acceso con Google o Microsoft** para activar las notificaciones vía Gmail u Outlook con una experiencia inspirada en Teams.
+- **Acceso con Google o Microsoft** para activar las notificaciones vía Gmail u Outlook con una experiencia inspirada en Teams (con modo demo cuando el backend no responde).
 - **Organizador semanal estilo Outlook** para crear, listar y eliminar bloques de horario estudiantil junto a las tareas con fecha.
 - **Gestión de tareas y recordatorios** con datos persistidos en archivos JSON y actualizaciones en tiempo real.
 - **Generador de resúmenes** a partir de texto pegado o archivos PDF/DOCX/PPTX/TXT, con pestañas para leer el resumen y el texto original completo.

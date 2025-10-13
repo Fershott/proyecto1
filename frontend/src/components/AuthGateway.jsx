@@ -11,7 +11,7 @@ const providerCopy = {
   }
 }
 
-const AuthGateway = ({ session, onLogin, onLogout, isLoading }) => {
+const AuthGateway = ({ session, onLogin, onLogout, isLoading, isOfflineMode, isBackendReachable }) => {
   const [email, setEmail] = useState('')
   const [feedback, setFeedback] = useState('')
   const [submittingProvider, setSubmittingProvider] = useState('')
@@ -62,6 +62,11 @@ const AuthGateway = ({ session, onLogin, onLogout, isLoading }) => {
         </div>
       </header>
       <div className="auth-card" role="form">
+        {!isBackendReachable && (
+          <p className="auth-card__demo-hint" role="status">
+            Modo demostración sin conexión: tus cambios se guardarán localmente hasta que el backend vuelva a conectarse.
+          </p>
+        )}
         <label className="auth-card__label" htmlFor="auth-email">
           <span>Correo educativo</span>
           <input
@@ -71,7 +76,7 @@ const AuthGateway = ({ session, onLogin, onLogout, isLoading }) => {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            disabled={isLoading || Boolean(session)}
+            disabled={isLoading || (Boolean(session) && !isOfflineMode)}
           />
         </label>
         <div className="auth-card__providers" role="group" aria-label="Proveedores de inicio de sesión">
@@ -81,7 +86,11 @@ const AuthGateway = ({ session, onLogin, onLogout, isLoading }) => {
               type="button"
               className={`auth-card__provider auth-card__provider--${provider}`}
               onClick={() => handleLogin(provider)}
-              disabled={isLoading || Boolean(session) || submittingProvider === provider}
+              disabled={
+                isLoading ||
+                Boolean(session && !isOfflineMode && isBackendReachable) ||
+                submittingProvider === provider
+              }
             >
               {submittingProvider === provider ? 'Conectando...' : providerCopy[provider].label}
               <span className="auth-card__helper">{providerCopy[provider].helper}</span>

@@ -481,6 +481,16 @@ textarea {
   color: var(--accent-strong);
 }
 
+.auth-card__demo-hint {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
 .panel--support {
   background: var(--surface-alt);
   border-style: dashed;
