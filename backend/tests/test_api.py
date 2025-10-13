@@ -79,12 +79,12 @@ except ModuleNotFoundError:  # pragma: no cover - testing fallback
     MISSING = _Missing()
 
     class FieldInfo:
-        def __init__(self, default=MISSING, default_factory=None):
+        def __init__(self, default=MISSING, default_factory=None, **kwargs):
             self.default = default
             self.default_factory = default_factory
 
-    def Field(default=MISSING, default_factory=None):  # noqa: D401 - mimic pydantic signature
-        return FieldInfo(default, default_factory)
+    def Field(default=MISSING, default_factory=None, **kwargs):  # noqa: D401 - mimic pydantic signature
+        return FieldInfo(default, default_factory, **kwargs)
 
     class BaseModelMeta(type):
         def __new__(mcls, name, bases, namespace):
@@ -140,6 +140,8 @@ def naive_utc() -> datetime:
 
 from backend.app import main, storage
 from backend.app.models import (
+    AuthProvider,
+    AuthRequest,
     DashboardStats,
     FocusSession,
     Reminder,
@@ -158,18 +160,44 @@ def patched_storage(tmp_path, monkeypatch):
     focus_file = tmp_path / "focus_sessions.json"
     schedule_file = tmp_path / "schedule.json"
     stats_file = tmp_path / "stats.json"
+    auth_file = tmp_path / "auth_session.json"
 
     monkeypatch.setattr(storage, "TASKS_FILE", tasks_file)
     monkeypatch.setattr(storage, "REMINDERS_FILE", reminders_file)
     monkeypatch.setattr(storage, "FOCUS_FILE", focus_file)
     monkeypatch.setattr(storage, "SCHEDULE_FILE", schedule_file)
     monkeypatch.setattr(storage, "STATS_FILE", stats_file)
+    monkeypatch.setattr(storage, "AUTH_FILE", auth_file)
 
     return storage
 
 
 def test_health_check():
     assert main.health_check() == {"status": "ok"}
+
+
+def test_auth_flow(patched_storage):
+    assert main.current_session() is None
+
+    request = AuthRequest(provider=AuthProvider.GOOGLE, email="alumna@gmail.com", name="Alumna")
+    session = main.login(request)
+    assert session.provider == AuthProvider.GOOGLE
+    assert session.email == "alumna@gmail.com"
+    assert session.name == "Alumna"
+
+    stored = main.current_session()
+    assert stored is not None
+    assert stored.email == "alumna@gmail.com"
+
+    main.logout()
+    assert main.current_session() is None
+
+
+def test_auth_rejects_invalid_domain(patched_storage):
+    with pytest.raises(HTTPException) as excinfo:
+        main.login(AuthRequest(provider=AuthProvider.MICROSOFT, email="ana@gmail.com"))
+
+    assert excinfo.value.status_code == 400
 
 
 def test_task_crud_flow(patched_storage):
@@ -370,7 +398,7 @@ def test_summary_file_endpoint(patched_storage):
     buffer = io.BytesIO(
         "La tecnología asistiva apoya a estudiantes con diferentes estilos de aprendizaje.".encode("utf-8")
     )
-    upload = UploadFile(filename="ayuda.txt", file=buffer, headers={"content-type": "text/plain"})
+    upload = UploadFile(filename="ayuda.txt", file=buffer, content_type="text/plain")
     response = asyncio.run(main.create_summary(text=None, sentences=1, file=upload))
     assert "estudiantes" in response.original_text.lower()
     assert response.summary

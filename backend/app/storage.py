@@ -1,9 +1,10 @@
 import json
 from datetime import datetime, time
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from .models import (
+    AuthSession,
     DashboardStats,
     FocusSession,
     Reminder,
@@ -21,6 +22,7 @@ REMINDERS_FILE = DATA_DIR / "reminders.json"
 FOCUS_FILE = DATA_DIR / "focus_sessions.json"
 SCHEDULE_FILE = DATA_DIR / "schedule.json"
 STATS_FILE = DATA_DIR / "stats.json"
+AUTH_FILE = DATA_DIR / "auth_session.json"
 
 
 def _read_json(path: Path, default):
@@ -149,3 +151,18 @@ def compute_dashboard_stats(tasks: List[Task], reminders: List[Reminder], sessio
         upcoming_reminders=upcoming_reminders,
         streak_days=base.streak_days,
     )
+
+
+def load_auth_session() -> Optional[AuthSession]:
+    raw = _read_json(AUTH_FILE, None)
+    if not raw:
+        return None
+    return AuthSession(**raw)
+
+
+def save_auth_session(session: Optional[AuthSession]) -> None:
+    if session is None:
+        if AUTH_FILE.exists():
+            AUTH_FILE.unlink()
+        return
+    _write_json(AUTH_FILE, session.dict())

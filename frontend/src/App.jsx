@@ -6,6 +6,7 @@ import SummaryAssistant from './components/SummaryAssistant'
 import FocusTimer from './components/FocusTimer'
 import QuickNotes from './components/QuickNotes'
 import SchedulePlanner from './components/SchedulePlanner'
+import AuthLogin from './components/AuthLogin'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -20,6 +21,8 @@ const TABS = [
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('tasks')
+  const [profile, setProfile] = useState(null)
+  const [loadingSession, setLoadingSession] = useState(true)
   const [stats, setStats] = useState({
     tasks_completed: 0,
     focus_hours: 0,
@@ -37,6 +40,31 @@ const App = () => {
   const [presetSummaryText, setPresetSummaryText] = useState('')
 
   useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const response = await fetch(`${API_URL}/auth/session`)
+        if (!response.ok) {
+          throw new Error('No se pudo verificar la sesión.')
+        }
+        const data = await response.json()
+        if (data) {
+          setProfile(data)
+        }
+      } catch (error) {
+        console.warn('Sesión no disponible', error)
+      } finally {
+        setLoadingSession(false)
+      }
+    }
+
+    fetchSession()
+  }, [])
+
+  useEffect(() => {
+    if (!profile) {
+      return
+    }
+
     const fetchData = async () => {
       try {
         const [statsResponse, tasksResponse, remindersResponse, scheduleResponse] = await Promise.all([
@@ -55,7 +83,7 @@ const App = () => {
     }
 
     fetchData()
-  }, [])
+  }, [profile])
 
   const handleMarkComplete = async (taskId) => {
     try {
@@ -224,9 +252,57 @@ const App = () => {
     }
   }, [])
 
+  const handleLogin = useCallback((session) => {
+    setProfile(session)
+  }, [])
+
+  const resetCollections = useCallback(() => {
+    setStats({
+      tasks_completed: 0,
+      focus_hours: 0,
+      milestones_completed: 0,
+      upcoming_reminders: 0,
+      streak_days: 0
+    })
+    setTasks([])
+    setReminders([])
+    setScheduleEntries([])
+    setSummary('')
+    setOriginalText('')
+    setKeywords([])
+    setPresetSummaryText('')
+    setIsSummarizing(false)
+  }, [])
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch(`${API_URL}/auth/session`, {
+        method: 'DELETE'
+      })
+    } catch (error) {
+      console.error('No se pudo cerrar la sesión', error)
+    } finally {
+      resetCollections()
+      setProfile(null)
+      setActiveTab('tasks')
+    }
+  }, [resetCollections])
+
+  if (loadingSession) {
+    return (
+      <div className="app-shell app-shell--loading">
+        <p>Cargando CogniCore...</p>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return <AuthLogin apiUrl={API_URL} onLogin={handleLogin} />
+  }
+
   return (
     <div className="app-shell">
-      <HeaderGreeting stats={stats} />
+      <HeaderGreeting stats={stats} profile={profile} onLogout={handleLogout} />
       <nav className="tab-bar" role="tablist" aria-label="Secciones principales">
         {TABS.map((tab) => (
           <button

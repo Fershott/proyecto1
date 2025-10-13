@@ -1,22 +1,39 @@
 import React from 'react'
 
-const HeaderGreeting = ({ stats }) => {
+const HeaderGreeting = ({ stats, profile, onLogout }) => {
+  const displayName = profile?.name || profile?.email || 'estudiante'
+  const secondaryLabel = profile?.name ? profile.email : 'Cuenta conectada'
+
   return (
     <header className="overview" aria-labelledby="welcome-heading">
       <div className="overview__brand">
         <div className="brand-icon" aria-hidden="true">
           CC
         </div>
-        <div>
+        <div className="overview__intro">
           <p className="overview__eyebrow">Tu agenda universitaria</p>
           <h1 id="welcome-heading" className="overview__title">
             CogniCore
           </h1>
           <p className="overview__description">
-            Un espacio diseñado para estudiantes que buscan claridad: organiza tu semana, prepara tus entregas y escucha
-            tus resúmenes sin estrés.
+            Hola {displayName}, listo para conquistar tu semana con un calendario colorido y resúmenes que puedes escuchar cuando
+            quieras.
           </p>
         </div>
+      </div>
+      <div className="overview__session" role="group" aria-label="Tu sesión de CogniCore">
+        <div className="overview__user">
+          <span className="overview__avatar" aria-hidden="true">
+            {(profile?.name || profile?.email || 'C')[0].toUpperCase()}
+          </span>
+          <div>
+            <p className="overview__user-name">{displayName}</p>
+            <p className="overview__user-email">{secondaryLabel}</p>
+          </div>
+        </div>
+        <button type="button" className="overview__logout" onClick={onLogout}>
+          Cerrar sesión
+        </button>
       </div>
       <div className="overview__stickers" aria-hidden="true">
         <span className="sticker sticker--pulse">Pomodoro flexible</span>

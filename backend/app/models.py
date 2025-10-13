@@ -69,3 +69,22 @@ class DashboardStats(BaseModel):
     milestones_completed: int
     upcoming_reminders: int
     streak_days: int
+
+
+class AuthProvider(str, Enum):
+    GOOGLE = "google"
+    MICROSOFT = "microsoft"
+
+
+class AuthRequest(BaseModel):
+    provider: AuthProvider
+    email: str
+    name: Optional[str] = None
+
+
+class AuthSession(BaseModel):
+    id: int
+    provider: AuthProvider
+    email: str
+    name: str
+    notifications_enabled: bool = True
