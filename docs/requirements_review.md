@@ -8,6 +8,7 @@ Este documento resume los objetivos iniciales de la plataforma y valida que el d
 2. Énfasis en accesibilidad e inclusión para personas con TDAH u otras neurodivergencias.
 3. Interfaz moderna, colorida y con guías claras que eviten la sobrecarga cognitiva.
 4. Funciones esenciales:
+   - Inicio de sesión con Google o Microsoft para sincronizar notificaciones vía correo.
    - Gestión de tareas y recordatorios con notificaciones programadas.
    - Temporizador Pomodoro ajustable para sesiones de enfoque.
    - Generación automática de resúmenes a partir de texto o archivos (PDF, Word, PowerPoint, TXT, etc.).
@@ -19,7 +20,8 @@ Este documento resume los objetivos iniciales de la plataforma y valida que el d
 |-----------|----------------|-----------|
 | Organización académica centrada en tareas y recordatorios | La aplicación se divide en pestañas "Tareas", "Pomodoro", "Calendario", "Recordatorios", "Resúmenes" e "Ideas rápidas", cargando datos reales desde la API y permitiendo marcar tareas como completadas. | `App.jsx` define las pestañas y conecta los endpoints de tareas y recordatorios. |
 | Temporizador Pomodoro ajustable | El componente `FocusTimer` ofrece controles para ajustar la duración, iniciar/pausar y resetear la sesión, notificando al finalizar. | `FocusTimer.jsx` maneja la lógica del temporizador y emite la alerta de finalización. |
-| Recordatorios notificables | `ReminderList` ordena los recordatorios por fecha, destaca el próximo aviso y expone la hora configurada. | `ReminderList.jsx` formatea la lista con estados claros y sugerencias laterales. |
+| Acceso con proveedores educativos | La pestaña inicial guía al usuario a iniciar sesión con Google o Microsoft y guarda la sesión para personalizar notificaciones. | `AuthGateway.jsx` muestra los botones de proveedor, valida el correo y expone la sesión activa. |
+| Recordatorios notificables | `ReminderList` ordena los recordatorios por fecha, destaca el próximo aviso y expone la hora configurada con etiqueta del proveedor (Gmail/Outlook estilo Teams). | `ReminderList.jsx` formatea la lista, bloquea el formulario si no hay sesión y pinta la insignia del canal. |
 | Resúmenes desde texto o archivos múltiples | `SummaryAssistant` permite pegar texto o subir archivos PDF/DOCX/PPTX/TXT mediante un sticker holográfico de carga accesible. | `SummaryAssistant.jsx` prepara el `FormData`, gestiona la carga por archivo y muestra formatos admitidos. |
 | Texto a voz del resumen o contenido completo | Botones dedicados disparan `speechSynthesis` con tasa ajustada y un botón adicional detiene la reproducción. | `App.jsx` expone `speakText` y `stopSpeaking` que envían el resumen o el texto original al sintetizador. |
 | Interfaz moderna y guiada | El shell principal usa pestañas estudiantiles con tarjetas coloridas, jerarquía tipográfica suave, rejillas organizadas y etiquetas accesibles. | `styles.css` define el layout de escritorio, la paleta viva y los estados de foco visibles; `preview/index.html` muestra la disposición tabulada centrada en 1180 px. |

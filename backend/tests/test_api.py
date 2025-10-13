@@ -139,7 +139,17 @@ def naive_utc() -> datetime:
 
 
 from backend.app import main, storage
-from backend.app.models import DashboardStats, FocusSession, Reminder, ScheduleEntry, Task, TaskStatus
+from backend.app.models import (
+    AuthProvider,
+    DashboardStats,
+    FocusSession,
+    Reminder,
+    ReminderCreate,
+    ScheduleEntry,
+    SessionCreate,
+    Task,
+    TaskStatus,
+)
 
 
 @pytest.fixture()
@@ -151,18 +161,60 @@ def patched_storage(tmp_path, monkeypatch):
     focus_file = tmp_path / "focus_sessions.json"
     schedule_file = tmp_path / "schedule.json"
     stats_file = tmp_path / "stats.json"
+    sessions_file = tmp_path / "sessions.json"
 
     monkeypatch.setattr(storage, "TASKS_FILE", tasks_file)
     monkeypatch.setattr(storage, "REMINDERS_FILE", reminders_file)
     monkeypatch.setattr(storage, "FOCUS_FILE", focus_file)
     monkeypatch.setattr(storage, "SCHEDULE_FILE", schedule_file)
     monkeypatch.setattr(storage, "STATS_FILE", stats_file)
+    monkeypatch.setattr(storage, "SESSIONS_FILE", sessions_file)
 
     return storage
 
 
 def test_health_check():
     assert main.health_check() == {"status": "ok"}
+
+
+def test_session_flow(patched_storage):
+    assert main.get_session() is None
+
+    with pytest.raises(HTTPException) as excinfo:
+        main.create_session(
+            SessionCreate(
+                email="persona@yahoo.com",
+                provider=AuthProvider.GOOGLE,
+                display_name="Persona",
+            )
+        )
+    assert excinfo.value.status_code == 400
+
+    created = main.create_session(
+        SessionCreate(
+            email="team.student@outlook.com",
+            provider=AuthProvider.MICROSOFT,
+            display_name="Team Student",
+        )
+    )
+
+    assert created.provider is AuthProvider.MICROSOFT
+    assert main.get_session() is not None
+
+    main.clear_session()
+    assert main.get_session() is None
+
+
+def test_reminder_requires_session(patched_storage):
+    with pytest.raises(HTTPException) as excinfo:
+        main.create_reminder(
+            ReminderCreate(
+                title="Recordar sin sesión",
+                description=None,
+                remind_at=naive_utc() + timedelta(hours=1),
+            )
+        )
+    assert excinfo.value.status_code == 401
 
 
 def test_task_crud_flow(patched_storage):
@@ -209,9 +261,16 @@ def test_task_crud_flow(patched_storage):
 
 
 def test_reminder_flow(patched_storage):
+    main.create_session(
+        SessionCreate(
+            email="sofia.student@gmail.com",
+            provider=AuthProvider.GOOGLE,
+            display_name="Sofía Student",
+        )
+    )
+
     created = main.create_reminder(
-        Reminder(
-            id=0,
+        ReminderCreate(
             title="Entrega de proyecto",
             description="Enviar informe final",
             remind_at=naive_utc() + timedelta(hours=3),
@@ -219,6 +278,7 @@ def test_reminder_flow(patched_storage):
     )
     assert created.id == 1
     assert created.title == "Entrega de proyecto"
+    assert created.delivery_provider == AuthProvider.GOOGLE
 
     reminders = main.list_reminders()
     assert len(reminders) == 1
@@ -297,6 +357,14 @@ def test_dashboard_stats(patched_storage):
         )
     )
 
+    main.create_session(
+        SessionCreate(
+            email="luis.organizer@outlook.com",
+            provider=AuthProvider.MICROSOFT,
+            display_name="Luis Organizer",
+        )
+    )
+
     main.create_task(
         Task(
             id=0,
@@ -328,8 +396,7 @@ def test_dashboard_stats(patched_storage):
     )
 
     main.create_reminder(
-        Reminder(
-            id=0,
+        ReminderCreate(
             title="Recordar reunión",
             description="Reunión con tutor",
             remind_at=naive_utc() + timedelta(hours=4),

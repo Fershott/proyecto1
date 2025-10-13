@@ -1,6 +1,6 @@
 # CogniCore
 
-CogniCore es una plataforma web inclusiva para la organización académica universitaria con énfasis en estudiantes con TDAH u otras neurodivergencias. El proyecto combina una API en Python (FastAPI) y una interfaz React pensada para guiar paso a paso al usuario con un estilo estudiantil, colorido y accesible.
+CogniCore es una plataforma web inclusiva para la organización académica universitaria con énfasis en estudiantes con TDAH u otras neurodivergencias. El proyecto combina una API en Python (FastAPI) y una interfaz React pensada para guiar paso a paso al usuario con un estilo estudiantil, colorido y accesible. La experiencia arranca en una pestaña de acceso que acepta exclusivamente cuentas de Google o Microsoft para enviar los recordatorios como avisos tipo Teams a Gmail u Outlook.
 
 ## Estructura del proyecto
 
@@ -17,6 +17,7 @@ backend/
       focus_sessions.json
       schedule.json
       stats.json
+      sessions.json
   requirements.txt
 frontend/
   index.html
@@ -26,6 +27,7 @@ frontend/
     main.jsx
     App.jsx
     components/
+      AuthGateway.jsx
       HeaderGreeting.jsx
       TaskList.jsx
       ReminderList.jsx
@@ -149,19 +151,20 @@ npm install
 npm run dev
 ```
 
-La interfaz se servirá en `http://localhost:5173`. El proxy de desarrollo redirige las peticiones `/api` hacia el backend. El 
-dashboard abre directamente en la pestaña de **Tareas**, listo para consultar métricas, pomodoros, calendario y recordatorios sin pasos adicionales.
+La interfaz se servirá en `http://localhost:5173`. El proxy de desarrollo redirige las peticiones `/api` hacia el backend. La
+aplicación abre en la pestaña de **Acceso**, donde debes iniciar sesión con Google o Microsoft para que los recordatorios se sincronicen con tu correo. Una vez autenticado, se habilitan las pestañas de tareas, pomodoro, calendario, recordatorios y resúmenes.
 
 ### Vista previa estática del diseño estudiantil
 
 Si solo necesitas revisar la propuesta visual sin compilar la app de React, abre el archivo
 `frontend/preview/index.html` en tu navegador. La maqueta refleja el estilo estudiantil y
-colorido de CogniCore, con pestañas dedicadas para tareas, Pomodoro, calendario semanal,
-recordatorios, resúmenes y un tablero de ideas rápidas.
+colorido de CogniCore, incluyendo la pestaña de acceso para Google/Microsoft y las vistas
+dedicadas a tareas, Pomodoro, calendario semanal, recordatorios, resúmenes y un tablero de ideas rápidas.
 
 ## Funcionalidades principales
 
 - **Pestañas por flujo**: tareas, Pomodoro, calendario semanal, recordatorios, resúmenes e ideas rápidas para evitar sobrecarga.
+- **Acceso con Google o Microsoft** para activar las notificaciones vía Gmail u Outlook con una experiencia inspirada en Teams.
 - **Organizador semanal estilo Outlook** para crear, listar y eliminar bloques de horario estudiantil junto a las tareas con fecha.
 - **Gestión de tareas y recordatorios** con datos persistidos en archivos JSON y actualizaciones en tiempo real.
 - **Generador de resúmenes** a partir de texto pegado o archivos PDF/DOCX/PPTX/TXT, con pestañas para leer el resumen y el texto original completo.

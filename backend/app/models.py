@@ -23,6 +23,7 @@ class Reminder(BaseModel):
     description: Optional[str] = None
     remind_at: datetime
     type: ReminderType = ReminderType.TASK
+    delivery_provider: "AuthProvider" = Field(default_factory=lambda: AuthProvider.GOOGLE)
 
 
 class Task(BaseModel):
@@ -69,5 +70,31 @@ class DashboardStats(BaseModel):
     milestones_completed: int
     upcoming_reminders: int
     streak_days: int
+
+
+class AuthProvider(str, Enum):
+    GOOGLE = "google"
+    MICROSOFT = "microsoft"
+
+
+class SessionBase(BaseModel):
+    email: str
+    provider: AuthProvider
+    display_name: str
+
+
+class Session(SessionBase):
+    id: int
+
+
+class SessionCreate(SessionBase):
+    pass
+
+
+class ReminderCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    remind_at: datetime
+    type: ReminderType = ReminderType.TASK
 
 

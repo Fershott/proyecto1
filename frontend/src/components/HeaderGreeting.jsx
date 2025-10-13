@@ -1,6 +1,13 @@
 import React from 'react'
 
-const HeaderGreeting = ({ stats }) => {
+const HeaderGreeting = ({ stats, session }) => {
+  const greetingName = session?.display_name ? session.display_name.split(' ')[0] : 'explorador'
+  const providerHint = session
+    ? session.provider === 'google'
+      ? 'Los avisos llegarán a Gmail como recordatorios estilo Teams.'
+      : 'Tus avisos se enviarán a Outlook y Teams.'
+    : 'Inicia con Google o Microsoft para activar los avisos tipo Teams.'
+
   return (
     <header className="overview" aria-labelledby="welcome-heading">
       <div className="overview__brand">
@@ -13,14 +20,17 @@ const HeaderGreeting = ({ stats }) => {
             CogniCore
           </h1>
           <p className="overview__description">
-            Organiza tu semana con un calendario estilo Outlook, recordatorios claros y resúmenes que puedes escuchar en voz alta
-            cuando lo necesites.
+            Hola {greetingName}, organiza tu semana con un calendario estilo Outlook, recordatorios como Teams y resúmenes que
+            puedes escuchar en voz alta cuando lo necesites.
+          </p>
+          <p className="overview__helper" aria-live="polite">
+            {providerHint}
           </p>
         </div>
       </div>
       <div className="overview__stickers" aria-hidden="true">
         <span className="sticker sticker--pulse">Pomodoro flexible</span>
-        <span className="sticker sticker--accent">Recordatorios coloridos</span>
+        <span className="sticker sticker--accent">Recordatorios como Teams</span>
         <span className="sticker sticker--outline">Audio + resúmenes claros</span>
       </div>
       <div className="overview__metrics" role="list" aria-label="Indicadores de progreso">

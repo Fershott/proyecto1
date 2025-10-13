@@ -76,14 +76,15 @@
             <p class="overview__eyebrow">Tu agenda universitaria</p>
             <h1 id="welcome-heading" class="overview__title">CogniCore</h1>
             <p class="overview__description">
-              Organiza tu semana con un calendario estilo Outlook, recordatorios claros y resúmenes que puedes escuchar en voz
-              alta cuando lo necesites.
+              Hola Sofía, organiza tu semana con un calendario estilo Outlook, recordatorios como Teams y resúmenes que puedes
+              escuchar en voz alta cuando lo necesites.
             </p>
+            <p class="overview__helper">Los avisos se sincronizan con Gmail u Outlook según el inicio de sesión que elijas.</p>
           </div>
         </div>
         <div class="overview__stickers" aria-hidden="true">
           <span class="sticker sticker--pulse">Pomodoro flexible</span>
-          <span class="sticker sticker--accent">Recordatorios coloridos</span>
+          <span class="sticker sticker--accent">Recordatorios como Teams</span>
           <span class="sticker sticker--outline">Audio + resúmenes claros</span>
         </div>
         <div class="overview__metrics" role="list" aria-label="Indicadores de progreso">
@@ -106,7 +107,8 @@
       </header>
 
       <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
-        <button type="button" class="tab-bar__button is-active" role="tab">Tareas</button>
+        <button type="button" class="tab-bar__button is-active" role="tab">Acceso</button>
+        <button type="button" class="tab-bar__button" role="tab">Tareas</button>
         <button type="button" class="tab-bar__button" role="tab">Pomodoro</button>
         <button type="button" class="tab-bar__button" role="tab">Calendario</button>
         <button type="button" class="tab-bar__button" role="tab">Recordatorios</button>
@@ -115,6 +117,51 @@
       </nav>
 
       <main class="tab-panels">
+        <div class="preview-tab">
+          <span class="preview-tab__label">Acceso</span>
+          <section class="tab-panel" aria-labelledby="tab-login">
+            <section class="panel panel--auth" aria-labelledby="login-heading" data-sticker="Acceso" data-icon="🔐">
+              <header class="panel__header">
+                <div>
+                  <h2 id="login-heading" class="panel__title">Ingresa a CogniCore</h2>
+                  <p class="panel__subtitle">
+                    Elige Google u Outlook para que los recordatorios lleguen como avisos tipo Teams en tu correo.
+                  </p>
+                </div>
+              </header>
+              <div class="auth-card" role="form">
+                <label class="auth-card__label" for="preview-auth-email">
+                  <span>Correo educativo</span>
+                  <input
+                    id="preview-auth-email"
+                    type="email"
+                    value="sofia.student@gmail.com"
+                    disabled
+                  />
+                </label>
+                <div class="auth-card__providers" role="group" aria-label="Proveedores de inicio de sesión">
+                  <button type="button" class="auth-card__provider auth-card__provider--google" disabled>
+                    Continuar con Google
+                    <span class="auth-card__helper">Recibirás avisos en Gmail como recordatorios de Teams.</span>
+                  </button>
+                  <button type="button" class="auth-card__provider auth-card__provider--microsoft">
+                    Continuar con Microsoft
+                    <span class="auth-card__helper">Sincroniza los avisos con Outlook y Microsoft Teams.</span>
+                  </button>
+                </div>
+                <div class="auth-card__session" aria-live="polite">
+                  <p class="auth-card__session-title">Sesión activa</p>
+                  <p class="auth-card__session-text">Sofía Student · sofia.student@gmail.com</p>
+                  <span class="auth-card__session-pill">Notificaciones vía Gmail · estilo Teams</span>
+                  <button type="button" class="auth-card__logout">Cerrar sesión</button>
+                </div>
+                <p class="auth-card__feedback">
+                  ¡Listo! Tu agenda se sincroniza con el correo y podrás programar recordatorios al estilo de Teams.
+                </p>
+              </div>
+            </section>
+          </section>
+        </div>
         <div class="preview-tab">
           <span class="preview-tab__label">Tareas</span>
           <section class="tab-panel" aria-labelledby="tab-tasks">
@@ -387,6 +434,7 @@
                   <p class="panel__subtitle">
                     Visualiza tus notificaciones por orden cronológico y mantén claros los próximos hitos.
                   </p>
+                  <p class="panel__helper">Los avisos se enviarán a Gmail como tarjetas estilo Teams para que no pierdas detalle.</p>
                 </div>
                 <div class="panel__callout" aria-live="polite">
                   <span class="panel__callout-label">Próximo aviso</span>
@@ -439,7 +487,7 @@
                       <span class="list-item__meta">13/05/2025 08:00</span>
                     </div>
                     <div class="list-item__actions">
-                      <span class="pill pill--outline">Notificación</span>
+                      <span class="pill pill--outline">Gmail · estilo Teams</span>
                     </div>
                   </article>
                   <article class="list-item" role="listitem">
@@ -448,7 +496,7 @@
                       <span class="list-item__meta">14/05/2025 18:00</span>
                     </div>
                     <div class="list-item__actions">
-                      <span class="pill pill--outline">Notificación</span>
+                      <span class="pill pill--outline">Outlook · Teams</span>
                     </div>
                   </article>
                   <article class="list-item" role="listitem">
@@ -457,7 +505,7 @@
                       <span class="list-item__meta">15/05/2025 12:30</span>
                     </div>
                     <div class="list-item__actions">
-                      <span class="pill pill--outline">Notificación</span>
+                      <span class="pill pill--outline">Gmail · estilo Teams</span>
                     </div>
                   </article>
                 </div>

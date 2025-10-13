@@ -3,7 +3,16 @@ from datetime import datetime, time
 from pathlib import Path
 from typing import List
 
-from .models import DashboardStats, FocusSession, Reminder, ScheduleEntry, Task, TaskStatus
+from .models import (
+    AuthProvider,
+    DashboardStats,
+    FocusSession,
+    Reminder,
+    ScheduleEntry,
+    Session,
+    Task,
+    TaskStatus,
+)
 
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -14,6 +23,7 @@ REMINDERS_FILE = DATA_DIR / "reminders.json"
 FOCUS_FILE = DATA_DIR / "focus_sessions.json"
 SCHEDULE_FILE = DATA_DIR / "schedule.json"
 STATS_FILE = DATA_DIR / "stats.json"
+SESSIONS_FILE = DATA_DIR / "sessions.json"
 
 
 def _read_json(path: Path, default):
@@ -73,6 +83,8 @@ def load_reminders() -> List[Reminder]:
     reminders = []
     for item in raw:
         item["remind_at"] = datetime.fromisoformat(item["remind_at"])
+        if "delivery_provider" not in item:
+            item["delivery_provider"] = AuthProvider.GOOGLE.value
         reminders.append(Reminder(**item))
     return reminders
 
@@ -82,6 +94,7 @@ def save_reminders(reminders: List[Reminder]) -> None:
     for reminder in reminders:
         data = reminder.dict()
         data["remind_at"] = reminder.remind_at.isoformat()
+        data["delivery_provider"] = reminder.delivery_provider.value
         payload.append(data)
     _write_json(REMINDERS_FILE, payload)
 
@@ -142,5 +155,22 @@ def compute_dashboard_stats(tasks: List[Task], reminders: List[Reminder], sessio
         upcoming_reminders=upcoming_reminders,
         streak_days=base.streak_days,
     )
+
+
+def load_sessions() -> List[Session]:
+    raw = _read_json(SESSIONS_FILE, [])
+    sessions: List[Session] = []
+    for item in raw:
+        sessions.append(Session(**item))
+    return sessions
+
+
+def save_sessions(sessions: List[Session]) -> None:
+    payload = []
+    for session in sessions:
+        data = session.dict()
+        data["provider"] = session.provider.value
+        payload.append(data)
+    _write_json(SESSIONS_FILE, payload)
 
 

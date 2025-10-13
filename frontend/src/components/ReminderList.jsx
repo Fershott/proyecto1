@@ -1,12 +1,20 @@
 import React, { useState } from 'react'
 
-const ReminderList = ({ reminders = [], onAdd }) => {
+const providerLabels = {
+  google: 'Gmail · estilo Teams',
+  microsoft: 'Outlook · Teams'
+}
+
+const ReminderList = ({ reminders = [], onAdd, session }) => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
   const [type, setType] = useState('task')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const isSessionActive = Boolean(session)
+  const activeProvider = session?.provider || 'google'
 
   const resetForm = () => {
     setTitle('')
@@ -18,6 +26,11 @@ const ReminderList = ({ reminders = [], onAdd }) => {
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (!onAdd || isSubmitting) return
+
+    if (!isSessionActive) {
+      setError('Inicia sesión con Google o Microsoft para programar avisos tipo Teams.')
+      return
+    }
 
     if (!title.trim() || !scheduledAt) {
       setError('Indica un título y una fecha para poder agendar el recordatorio.')
@@ -62,6 +75,11 @@ const ReminderList = ({ reminders = [], onAdd }) => {
           <p className="panel__subtitle">
             Visualiza tus notificaciones por orden cronológico y mantén claros los próximos hitos.
           </p>
+          <p className="panel__helper">
+            {isSessionActive
+              ? `Se enviarán avisos a ${providerLabels[activeProvider]} para que sientas la experiencia de Teams.`
+              : 'Necesitas iniciar sesión para activar los avisos tipo Teams en tu correo.'}
+          </p>
         </div>
         {nextReminder && (
           <div className="panel__callout" aria-live="polite">
@@ -75,63 +93,69 @@ const ReminderList = ({ reminders = [], onAdd }) => {
           </div>
         )}
       </header>
-      <form className="reminder-composer" onSubmit={handleSubmit}>
-        <div className="reminder-composer__grid">
-          <label className="reminder-composer__label reminder-composer__label--wide" htmlFor="reminder-title">
-            <span>Título</span>
-            <input
-              id="reminder-title"
-              type="text"
-              value={title}
-              placeholder="Entrega de proyecto integrador"
-              onChange={(event) => setTitle(event.target.value)}
-            />
-          </label>
-          <label className="reminder-composer__label" htmlFor="reminder-type">
-            <span>Tipo</span>
-            <select
-              id="reminder-type"
-              value={type}
-              onChange={(event) => setType(event.target.value)}
-            >
-              <option value="task">Tarea</option>
-              <option value="focus">Enfoque</option>
-              <option value="personal">Personal</option>
-            </select>
-          </label>
-          <label className="reminder-composer__label" htmlFor="reminder-datetime">
-            <span>Fecha y hora</span>
-            <input
-              id="reminder-datetime"
-              type="datetime-local"
-              value={scheduledAt}
-              onChange={(event) => setScheduledAt(event.target.value)}
-            />
-          </label>
-          <label className="reminder-composer__label reminder-composer__label--wide" htmlFor="reminder-description">
-            <span>Notas (opcional)</span>
-            <textarea
-              id="reminder-description"
-              value={description}
-              placeholder="Añade instrucciones para recordar el contexto."
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </label>
-        </div>
-        <div className="reminder-composer__footer">
-          <p className="reminder-composer__hint">La plataforma te avisará con tiempo para que llegues a cada entrega con calma.</p>
-          <div className="reminder-composer__actions">
-            {error && (
-              <span className="reminder-composer__error" role="alert">
-                {error}
-              </span>
-            )}
-            <button type="submit" className="reminder-composer__submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : 'Agendar recordatorio'}
-            </button>
+        <form className="reminder-composer" onSubmit={handleSubmit}>
+          <div className="reminder-composer__grid">
+            <label className="reminder-composer__label reminder-composer__label--wide" htmlFor="reminder-title">
+              <span>Título</span>
+              <input
+                id="reminder-title"
+                type="text"
+                value={title}
+                placeholder="Entrega de proyecto integrador"
+                onChange={(event) => setTitle(event.target.value)}
+                disabled={!isSessionActive}
+              />
+            </label>
+            <label className="reminder-composer__label" htmlFor="reminder-type">
+              <span>Tipo</span>
+              <select
+                id="reminder-type"
+                value={type}
+                onChange={(event) => setType(event.target.value)}
+                disabled={!isSessionActive}
+              >
+                <option value="task">Tarea</option>
+                <option value="focus">Enfoque</option>
+                <option value="personal">Personal</option>
+              </select>
+            </label>
+            <label className="reminder-composer__label" htmlFor="reminder-datetime">
+              <span>Fecha y hora</span>
+              <input
+                id="reminder-datetime"
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(event) => setScheduledAt(event.target.value)}
+                disabled={!isSessionActive}
+              />
+            </label>
+            <label className="reminder-composer__label reminder-composer__label--wide" htmlFor="reminder-description">
+              <span>Notas (opcional)</span>
+              <textarea
+                id="reminder-description"
+                value={description}
+                placeholder="Añade instrucciones para recordar el contexto."
+                onChange={(event) => setDescription(event.target.value)}
+                disabled={!isSessionActive}
+              />
+            </label>
           </div>
-        </div>
-      </form>
+          <div className="reminder-composer__footer">
+            <p className="reminder-composer__hint">
+              La plataforma te avisará con tiempo para que llegues a cada entrega con calma.
+            </p>
+            <div className="reminder-composer__actions">
+              {error && (
+                <span className="reminder-composer__error" role="alert">
+                  {error}
+                </span>
+              )}
+              <button type="submit" className="reminder-composer__submit" disabled={isSubmitting || !isSessionActive}>
+                {isSubmitting ? 'Guardando...' : 'Agendar recordatorio'}
+              </button>
+            </div>
+          </div>
+        </form>
       <div className="reminder-grid">
         <div className="reminder-grid__list" role="list" aria-label="Lista de recordatorios programados">
           {formattedReminders.map((reminder) => (
@@ -147,7 +171,9 @@ const ReminderList = ({ reminders = [], onAdd }) => {
                 </span>
               </div>
               <div className="list-item__actions">
-                <span className="pill pill--outline">Notificación</span>
+                <span className="pill pill--outline">
+                  {providerLabels[reminder.delivery_provider] || 'Notificación'}
+                </span>
               </div>
             </article>
           ))}

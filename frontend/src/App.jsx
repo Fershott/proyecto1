@@ -6,10 +6,20 @@ import SummaryAssistant from './components/SummaryAssistant'
 import FocusTimer from './components/FocusTimer'
 import QuickNotes from './components/QuickNotes'
 import SchedulePlanner from './components/SchedulePlanner'
+import AuthGateway from './components/AuthGateway'
+
+const DEFAULT_STATS = {
+  tasks_completed: 0,
+  focus_hours: 0,
+  milestones_completed: 0,
+  upcoming_reminders: 0,
+  streak_days: 0
+}
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const TABS = [
+  { id: 'login', label: 'Acceso' },
   { id: 'tasks', label: 'Tareas' },
   { id: 'timer', label: 'Pomodoro' },
   { id: 'calendar', label: 'Calendario' },
@@ -19,14 +29,10 @@ const TABS = [
 ]
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState('tasks')
-  const [stats, setStats] = useState({
-    tasks_completed: 0,
-    focus_hours: 0,
-    milestones_completed: 0,
-    upcoming_reminders: 0,
-    streak_days: 0
-  })
+  const [activeTab, setActiveTab] = useState('login')
+  const [session, setSession] = useState(null)
+  const [isSessionLoading, setIsSessionLoading] = useState(true)
+  const [stats, setStats] = useState(() => ({ ...DEFAULT_STATS }))
   const [tasks, setTasks] = useState([])
   const [scheduleEntries, setScheduleEntries] = useState([])
   const [reminders, setReminders] = useState([])
@@ -36,7 +42,48 @@ const App = () => {
   const [isSummarizing, setIsSummarizing] = useState(false)
   const [presetSummaryText, setPresetSummaryText] = useState('')
 
+  const resetCollections = useCallback(() => {
+    setStats({ ...DEFAULT_STATS })
+    setTasks([])
+    setReminders([])
+    setScheduleEntries([])
+    setSummary('')
+    setOriginalText('')
+    setKeywords([])
+    setPresetSummaryText('')
+  }, [])
+
   useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const response = await fetch(`${API_URL}/session`)
+        if (!response.ok) {
+          return
+        }
+        const data = await response.json()
+        if (data) {
+          setSession(data)
+          setActiveTab('tasks')
+        }
+      } catch (error) {
+        console.error('No se pudo obtener la sesión', error)
+      } finally {
+        setIsSessionLoading(false)
+      }
+    }
+
+    fetchSession()
+  }, [])
+
+  useEffect(() => {
+    if (!session) {
+      resetCollections()
+      if (!isSessionLoading) {
+        setActiveTab('login')
+      }
+      return
+    }
+
     const fetchData = async () => {
       try {
         const [statsResponse, tasksResponse, remindersResponse, scheduleResponse] = await Promise.all([
@@ -55,7 +102,7 @@ const App = () => {
     }
 
     fetchData()
-  }, [])
+  }, [session, isSessionLoading, resetCollections])
 
   const handleMarkComplete = async (taskId) => {
     try {
@@ -102,6 +149,10 @@ const App = () => {
 
   const handleAddReminder = useCallback(
     async ({ title, description, remindAt, type }) => {
+      if (!session) {
+        alert('Inicia sesión con Google o Microsoft para agendar recordatorios.')
+        return null
+      }
       try {
         const response = await fetch(`${API_URL}/reminders`, {
           method: 'POST',
@@ -109,7 +160,6 @@ const App = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            id: 0,
             title,
             description,
             remind_at: remindAt,
@@ -156,6 +206,51 @@ const App = () => {
       window.speechSynthesis.cancel()
     }
   }, [])
+
+  const handleLogin = useCallback(
+    async ({ email, provider }) => {
+      try {
+        const displayName = email.split('@')[0].replace(/\./g, ' ')
+        const response = await fetch(`${API_URL}/session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email,
+            provider,
+            display_name: displayName.trim().replace(/\s+/g, ' ')
+          })
+        })
+
+        const data = await response.json()
+        if (!response.ok) {
+          return { success: false, error: data?.detail || 'No se pudo iniciar sesión.' }
+        }
+
+        setSession(data)
+        setActiveTab('tasks')
+        return { success: true }
+      } catch (error) {
+        console.error('Error al iniciar sesión', error)
+        return { success: false, error: 'Ocurrió un problema al iniciar sesión.' }
+      }
+    },
+    []
+  )
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch(`${API_URL}/session`, {
+        method: 'DELETE'
+      })
+    } catch (error) {
+      console.error('Error al cerrar sesión', error)
+    } finally {
+      stopSpeaking()
+      setSession(null)
+    }
+  }, [stopSpeaking])
 
   const handleSessionComplete = useCallback(() => {
     alert('¡Excelente! Tu sesión de enfoque ha terminado.')
@@ -226,24 +321,42 @@ const App = () => {
 
   return (
     <div className="app-shell">
-      <HeaderGreeting stats={stats} />
+      <HeaderGreeting stats={stats} session={session} />
       <nav className="tab-bar" role="tablist" aria-label="Secciones principales">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            id={`tab-${tab.id}`}
-            className={`tab-bar__button ${activeTab === tab.id ? 'is-active' : ''}`}
-            aria-selected={activeTab === tab.id}
-            aria-controls={`panel-${tab.id}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const isDisabled = !session && tab.id !== 'login'
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`tab-${tab.id}`}
+              className={`tab-bar__button ${activeTab === tab.id ? 'is-active' : ''} ${
+                isDisabled ? 'is-disabled' : ''
+              }`}
+              aria-selected={activeTab === tab.id}
+              aria-controls={`panel-${tab.id}`}
+              onClick={() => {
+                if (isDisabled) return
+                setActiveTab(tab.id)
+              }}
+              disabled={isDisabled}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
       </nav>
       <main className="tab-panels">
+        <section
+          id="panel-login"
+          role="tabpanel"
+          aria-labelledby="tab-login"
+          hidden={activeTab !== 'login'}
+          className="tab-panel"
+        >
+          <AuthGateway session={session} onLogin={handleLogin} onLogout={handleLogout} isLoading={isSessionLoading} />
+        </section>
         <section
           id="panel-tasks"
           role="tabpanel"
@@ -283,7 +396,7 @@ const App = () => {
           hidden={activeTab !== 'reminders'}
           className="tab-panel"
         >
-          <ReminderList reminders={reminders} onAdd={handleAddReminder} />
+          <ReminderList reminders={reminders} onAdd={handleAddReminder} session={session} />
         </section>
         <section
           id="panel-summary"

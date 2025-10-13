@@ -5,24 +5,30 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import summarizer
 from .models import (
+    AuthProvider,
     DashboardStats,
     FocusSession,
     Reminder,
+    ReminderCreate,
     ScheduleEntry,
     SummaryRequest,
     SummaryResponse,
     Task,
     TaskStatus,
+    Session,
+    SessionCreate,
 )
 from .storage import (
     compute_dashboard_stats,
     load_focus_sessions,
     load_reminders,
+    load_sessions,
     load_schedule,
     load_tasks,
     next_id,
     save_focus_sessions,
     save_reminders,
+    save_sessions,
     save_schedule,
     save_stats,
     save_tasks,
@@ -39,9 +45,77 @@ app.add_middleware(
 )
 
 
+ALLOWED_DOMAINS: dict[AuthProvider, tuple[str, ...]] = {
+    AuthProvider.GOOGLE: ("gmail.com", "googlemail.com"),
+    AuthProvider.MICROSOFT: (
+        "outlook.com",
+        "outlook.es",
+        "hotmail.com",
+        "hotmail.es",
+        "live.com",
+        "live.es",
+    ),
+}
+
+
+def _get_active_session() -> Session | None:
+    sessions = load_sessions()
+    return sessions[0] if sessions else None
+
+
+def _require_session() -> Session:
+    session = _get_active_session()
+    if session is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Inicia sesión con Google o Microsoft para programar recordatorios y sincronizar notificaciones.",
+        )
+    return session
+
+
+def _validate_email_provider(email: str, provider: AuthProvider) -> None:
+    email = email.strip()
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="El correo electrónico debe contener un dominio válido.")
+    domain = email.split("@", 1)[1].lower()
+    allowed = ALLOWED_DOMAINS.get(provider, ())
+    if domain not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail="Utiliza un correo de Gmail u Outlook para conectarte con las notificaciones de CogniCore.",
+        )
+
+
 @app.get("/health")
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/session", response_model=Optional[Session])
+def get_session() -> Session | None:
+    return _get_active_session()
+
+
+@app.post("/session", response_model=Session, status_code=201)
+def create_session(payload: SessionCreate) -> Session:
+    _validate_email_provider(payload.email, payload.provider)
+
+    normalized_email = payload.email.strip().lower()
+    sessions = [
+        Session(
+            id=1,
+            email=normalized_email,
+            provider=payload.provider,
+            display_name=payload.display_name.strip() or normalized_email.split("@", 1)[0],
+        )
+    ]
+    save_sessions(sessions)
+    return sessions[0]
+
+
+@app.delete("/session", status_code=204)
+def clear_session() -> None:
+    save_sessions([])
 
 
 @app.get("/tasks", response_model=list[Task])
@@ -97,12 +171,21 @@ def list_reminders() -> list[Reminder]:
 
 
 @app.post("/reminders", response_model=Reminder, status_code=201)
-def create_reminder(reminder: Reminder) -> Reminder:
+def create_reminder(reminder: ReminderCreate) -> Reminder:
+    session = _require_session()
     reminders = load_reminders()
-    reminder.id = next_id(reminders)
-    reminders.append(reminder)
+    reminder_id = next_id(reminders)
+    new_reminder = Reminder(
+        id=reminder_id,
+        title=reminder.title,
+        description=reminder.description,
+        remind_at=reminder.remind_at,
+        type=reminder.type,
+        delivery_provider=session.provider,
+    )
+    reminders.append(new_reminder)
     save_reminders(reminders)
-    return reminder
+    return new_reminder
 
 
 @app.delete("/reminders/{reminder_id}", status_code=204)
