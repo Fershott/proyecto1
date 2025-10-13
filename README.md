@@ -68,6 +68,22 @@ Cuando realices cambios adicionales en CogniCore, sigue estos pasos para mantene
 
 Este flujo garantiza que GitHub refleje siempre la versión más actualizada y probada de CogniCore.
 
+### Verificación integral en un solo comando
+
+Cuando quieras asegurarte de que todo funciona antes de compartir cambios, ejecuta el asistente `tools/run_full_checks.py`:
+
+```bash
+./tools/run_full_checks.py
+```
+
+El script reúne las ejecuciones de `pytest`, la demo de resúmenes y la compilación del backend. Añade la comprobación del
+actualizador de ramas para verificar que el CLI auxiliar siga disponible. Si en algún contexto no quieres lanzar ese último paso,
+puedes hacerlo con:
+
+```bash
+./tools/run_full_checks.py --skip-update-helper
+```
+
 ### Automatizar la actualización de ramas
 
 Si quieres ejecutar todos los pasos de sincronización con un solo comando, utiliza el asistente incluido en `tools/update_branch.py`:
