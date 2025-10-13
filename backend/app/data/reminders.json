@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "title": "Recordatorio TDAH: pausa activa",
+    "description": "Levántate y estira durante 5 minutos",
+    "remind_at": "2024-04-10T15:30:00",
+    "type": "personal",
+    "delivery_provider": "google"
+  },
+  {
+    "id": 2,
+    "title": "Entrega informe de laboratorio",
+    "description": "Subir el informe antes de medianoche",
+    "remind_at": "2024-04-12T22:00:00",
+    "type": "task",
+    "delivery_provider": "microsoft"
+  }
+]

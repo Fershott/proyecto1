@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vista previa - CogniCore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles.css" />
+    <style>
+      body.is-preview-desktop {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 48px 0 96px;
+        min-height: 100vh;
+      }
+
+      .preview-banner {
+        text-align: center;
+        padding: 16px 24px;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.16), rgba(16, 185, 129, 0.16));
+        border-radius: 999px;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        font-size: 14px;
+        color: #1f2937;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 32px;
+      }
+
+      body.is-preview-desktop .app-shell {
+        width: 1180px;
+        min-width: 1180px;
+      }
+
+      .preview-tab {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .preview-tab__label {
+        font-size: 13px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(31, 41, 55, 0.6);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .preview-tab__label::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 2px;
+        border-radius: 999px;
+        background: rgba(79, 70, 229, 0.4);
+      }
+
+    </style>
+  </head>
+  <body class="is-preview-desktop">
+    <div class="preview-banner">Vista estática de referencia. La aplicación real cambia entre pestañas.</div>
+    <div class="app-shell">
+      <header class="overview" aria-labelledby="welcome-heading">
+        <div class="overview__topbar">
+          <div class="overview__brand">
+            <div class="brand-icon" aria-hidden="true">CC</div>
+            <div class="overview__intro">
+              <p class="overview__eyebrow">Tu agenda universitaria</p>
+              <h1 id="welcome-heading" class="overview__title">CogniCore</h1>
+              <p class="overview__description">
+                Hola Sofía, organiza tu semana con un calendario estilo Outlook, recordatorios como Teams y resúmenes que
+                puedes escuchar en voz alta cuando lo necesites.
+              </p>
+              <p class="overview__helper">
+                Los avisos se sincronizan con Gmail u Outlook según el inicio de sesión que elijas.
+              </p>
+            </div>
+          </div>
+          <div class="profile-menu is-open">
+            <button type="button" class="profile-menu__trigger">
+              <span class="profile-menu__avatar">SS</span>
+              <span class="profile-menu__name">Sofía Student</span>
+            </button>
+            <div class="profile-menu__panel" role="menu">
+              <div class="profile-menu__header">
+                <p class="profile-menu__title">Sofía Student</p>
+                <p class="profile-menu__email">sofia.student@gmail.com</p>
+                <span class="profile-menu__badge">Notificaciones vía Gmail y Teams</span>
+              </div>
+              <div class="profile-menu__actions">
+                <button type="button" role="menuitem">Cambiar a modo oscuro</button>
+                <button type="button" role="menuitem">Cerrar sesión</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="overview__stickers" aria-hidden="true">
+          <span class="sticker sticker--pulse">Pomodoro flexible</span>
+          <span class="sticker sticker--accent">Recordatorios como Teams</span>
+          <span class="sticker sticker--outline">Audio + resúmenes claros</span>
+        </div>
+        <div class="overview__metrics" role="list" aria-label="Indicadores de progreso">
+          <article class="metric" role="listitem">
+            <span class="metric__label">Tareas completadas</span>
+            <strong class="metric__value">12</strong>
+            <span class="metric__hint">6 h de enfoque</span>
+          </article>
+          <article class="metric" role="listitem">
+            <span class="metric__label">Hábitos activos</span>
+            <strong class="metric__value">4</strong>
+            <span class="metric__hint">8 días en racha</span>
+          </article>
+          <article class="metric" role="listitem">
+            <span class="metric__label">Recordatorios próximos</span>
+            <strong class="metric__value">3</strong>
+            <span class="metric__hint">Notificaciones programadas</span>
+          </article>
+        </div>
+      </header>
+
+      <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
+        <button type="button" class="tab-bar__button is-active" role="tab">Acceso</button>
+        <button type="button" class="tab-bar__button" role="tab">Tareas</button>
+        <button type="button" class="tab-bar__button" role="tab">Pomodoro</button>
+        <button type="button" class="tab-bar__button" role="tab">Calendario</button>
+        <button type="button" class="tab-bar__button" role="tab">Recordatorios</button>
+        <button type="button" class="tab-bar__button" role="tab">Resúmenes</button>
+        <button type="button" class="tab-bar__button" role="tab">Ideas rápidas</button>
+      </nav>
+
+      <main class="tab-panels">
+        <div class="preview-tab">
+          <span class="preview-tab__label">Acceso</span>
+          <section class="tab-panel" aria-labelledby="tab-login">
+            <section class="panel panel--auth" aria-labelledby="login-heading" data-sticker="Acceso" data-icon="🔐">
+              <header class="panel__header">
+                <div class="panel__header-main">
+                  <h2 id="login-heading" class="panel__title">Ingresa a CogniCore</h2>
+                  <p class="panel__subtitle">
+                    Regístrate con Google u Outlook para que los recordatorios lleguen como avisos tipo Teams en tu correo.
+                  </p>
+                </div>
+                <button type="button" class="panel__mode-toggle">Modo oscuro</button>
+              </header>
+              <div class="auth-card" role="form">
+                <div class="auth-card__mode" role="radiogroup" aria-label="Elige cómo continuar">
+                  <button type="button" role="radio" aria-checked="true" class="auth-card__mode-button is-active">
+                    Soy nuevo/a
+                  </button>
+                  <button type="button" role="radio" aria-checked="false" class="auth-card__mode-button">
+                    Ya tengo cuenta
+                  </button>
+                </div>
+                <label class="auth-card__label" for="preview-auth-email">
+                  <span>Correo educativo</span>
+                  <input id="preview-auth-email" type="email" value="sofia.student@gmail.com" disabled />
+                </label>
+                <label class="auth-card__label" for="preview-auth-name">
+                  <span>Nombre para mostrar</span>
+                  <input id="preview-auth-name" type="text" value="Sofía Student" disabled />
+                </label>
+                <div class="auth-card__providers" role="group" aria-label="Proveedores de inicio de sesión">
+                  <button type="button" class="auth-card__provider auth-card__provider--google" disabled>
+                    Registrarme con Google
+                    <span class="auth-card__helper">Recibirás avisos en Gmail como recordatorios de Teams.</span>
+                  </button>
+                  <button type="button" class="auth-card__provider auth-card__provider--microsoft">
+                    Registrarme con Microsoft
+                    <span class="auth-card__helper">Sincroniza los avisos con Outlook y Microsoft Teams.</span>
+                  </button>
+                </div>
+                <div class="auth-card__session" aria-live="polite">
+                  <p class="auth-card__session-title">Sesión activa</p>
+                  <p class="auth-card__session-text">Sofía Student · sofia.student@gmail.com</p>
+                  <span class="auth-card__session-pill">Notificaciones vía Gmail · estilo Teams</span>
+                  <button type="button" class="auth-card__logout">Cerrar sesión</button>
+                </div>
+                <p class="auth-card__feedback">
+                  Te enviamos un correo de bienvenida para confirmar tu registro. ¡Ya puedes planificar tu semana con CogniCore!
+                </p>
+              </div>
+            </section>
+          </section>
+        </div>
+        <div class="preview-tab">
+          <span class="preview-tab__label">Tareas</span>
+          <section class="tab-panel" aria-labelledby="tab-tasks">
+            <section
+              class="panel panel--with-sticker"
+              aria-labelledby="tasks-heading"
+              data-sticker="Plan de estudio"
+              data-icon="📚"
+            >
+              <header class="panel__header">
+                <div>
+                  <h2 id="tasks-heading" class="panel__title">Plan diario</h2>
+                  <p class="panel__subtitle">
+                    Organiza tus materias y marca lo que avances para mantener la semana bajo control.
+                  </p>
+                </div>
+              </header>
+              <div class="list" role="list">
+                <article class="list-item" role="listitem">
+                  <div class="list-item__body">
+                    <span class="list-item__title">Ensayo de inclusión educativa</span>
+                    <span class="list-item__meta">Pedagogía · 12/05/2025 10:00</span>
+                    <span class="list-item__meta">Divide la redacción en bloques de 20 minutos.</span>
+                  </div>
+                  <div class="list-item__actions">
+                    <span class="status-pill status-pill--pending">pendiente</span>
+                    <button type="button" class="ghost-button">Marcar completada</button>
+                  </div>
+                </article>
+                <article class="list-item" role="listitem">
+                  <div class="list-item__body">
+                    <span class="list-item__title">Quiz de neurodiversidad</span>
+                    <span class="list-item__meta">Psicología · 13/05/2025 08:30</span>
+                  </div>
+                  <div class="list-item__actions">
+                    <span class="status-pill status-pill--in_progress">en progreso</span>
+                    <button type="button" class="ghost-button">Marcar completada</button>
+                  </div>
+                </article>
+                <article class="list-item" role="listitem">
+                  <div class="list-item__body">
+                    <span class="list-item__title">Foro colaborativo</span>
+                    <span class="list-item__meta">Comunicación · 14/05/2025 23:59</span>
+                  </div>
+                  <div class="list-item__actions">
+                    <span class="status-pill status-pill--completed">completada</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <div class="preview-tab">
+          <span class="preview-tab__label">Pomodoro</span>
+          <section class="tab-panel" aria-labelledby="tab-timer">
+            <section
+              class="panel panel--with-sticker"
+              aria-labelledby="focus-heading"
+              data-sticker="Tiempo de enfoque"
+              data-icon="⏰"
+            >
+              <header class="panel__header">
+                <div>
+                  <h2 id="focus-heading" class="panel__title">Ritmo Pomodoro</h2>
+                  <p class="panel__subtitle">
+                    Configura la duración que mejor encaje con tu energía de estudio y haz pausas activas.
+                  </p>
+                </div>
+              </header>
+              <div class="timer" role="group" aria-label="Temporizador de enfoque">
+                <div class="timer__display" aria-live="polite">
+                  <span class="timer__time">24:15</span>
+                </div>
+                <div class="timer__presets" role="group" aria-label="Duraciones sugeridas">
+                  <button type="button" class="pill is-active">25 min</button>
+                  <button type="button" class="pill">15 min</button>
+                  <button type="button" class="pill">45 min</button>
+                </div>
+                <label class="timer__label" for="preview-custom-duration">Duración personalizada (5-90 min)</label>
+                <input id="preview-custom-duration" type="number" value="25" />
+                <div class="timer__actions">
+                  <button type="button" class="primary">Iniciar</button>
+                  <button type="button" class="ghost-button">Reiniciar</button>
+                </div>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <div class="preview-tab">
+          <span class="preview-tab__label">Calendario</span>
+          <section class="tab-panel" aria-labelledby="tab-calendar">
+            <section
+              class="panel panel--with-sticker"
+              aria-labelledby="calendar-heading"
+              data-sticker="Agenda semanal"
+              data-icon="📅"
+            >
+              <header class="panel__header">
+                <div>
+                  <h2 id="calendar-heading" class="panel__title">Organizador semanal</h2>
+                  <p class="panel__subtitle">
+                    Añade tus clases, tutorías y actividades recurrentes y visualízalas junto a las tareas pendientes.
+                  </p>
+                </div>
+              </header>
+              <div class="schedule-grid">
+                <form class="schedule-form">
+                  <div class="schedule-form__grid">
+                    <label class="schedule-form__label schedule-form__label--wide" for="preview-schedule-title">
+                      <span>Actividad</span>
+                      <input id="preview-schedule-title" type="text" placeholder="Laboratorio de química" />
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-day">
+                      <span>Día</span>
+                      <select id="preview-schedule-day">
+                        <option>Lunes</option>
+                        <option>Martes</option>
+                        <option selected>Miércoles</option>
+                        <option>Jueves</option>
+                        <option>Viernes</option>
+                        <option>Sábado</option>
+                        <option>Domingo</option>
+                      </select>
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-start">
+                      <span>Inicio</span>
+                      <input id="preview-schedule-start" type="time" value="15:00" />
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-end">
+                      <span>Fin</span>
+                      <input id="preview-schedule-end" type="time" value="16:30" />
+                    </label>
+                    <label class="schedule-form__label" for="preview-schedule-location">
+                      <span>Ubicación (opcional)</span>
+                      <input id="preview-schedule-location" type="text" placeholder="Sala 302" />
+                    </label>
+                    <label class="schedule-form__label schedule-form__label--wide" for="preview-schedule-notes">
+                      <span>Notas (opcional)</span>
+                      <textarea id="preview-schedule-notes" rows="3" placeholder="Recordar bata y gafas"></textarea>
+                    </label>
+                  </div>
+                  <div class="schedule-form__footer">
+                    <span class="schedule-form__error" role="alert">Completa la información para guardar tu bloque.</span>
+                    <button type="button" class="schedule-form__submit">Guardar en el calendario</button>
+                  </div>
+                </form>
+                <aside class="schedule-sidebar" aria-label="Horario registrado">
+                  <h3 class="schedule-sidebar__title">Bloques agendados</h3>
+                  <ul class="schedule-sidebar__list">
+                    <li class="schedule-sidebar__item">
+                      <div>
+                        <p class="schedule-sidebar__headline">Clases de programación</p>
+                        <p class="schedule-sidebar__meta">Lunes · 08:30 – 10:00</p>
+                        <p class="schedule-sidebar__meta">Aula virtual</p>
+                        <p class="schedule-sidebar__notes">Revisar apuntes previos del módulo.</p>
+                      </div>
+                      <button type="button" class="ghost-button schedule-sidebar__delete">Quitar</button>
+                    </li>
+                    <li class="schedule-sidebar__item">
+                      <div>
+                        <p class="schedule-sidebar__headline">Tutoría de neurociencia</p>
+                        <p class="schedule-sidebar__meta">Jueves · 15:00 – 16:00</p>
+                        <p class="schedule-sidebar__meta">Laboratorio 4</p>
+                        <p class="schedule-sidebar__notes">Preparar preguntas clave para la sesión.</p>
+                      </div>
+                      <button type="button" class="ghost-button schedule-sidebar__delete">Quitar</button>
+                    </li>
+                  </ul>
+                </aside>
+              </div>
+              <div class="calendar" role="grid" aria-label="Calendario semanal tipo Outlook">
+                <div class="calendar__head" role="row">
+                  <div class="calendar__head-cell" role="columnheader">
+                    <span class="calendar__head-day">Lunes</span>
+                    <span class="calendar__head-date">12 may</span>
+                  </div>
+                  <div class="calendar__head-cell" role="columnheader">
+                    <span class="calendar__head-day">Martes</span>
+                    <span class="calendar__head-date">13 may</span>
+                  </div>
+                  <div class="calendar__head-cell" role="columnheader">
+                    <span class="calendar__head-day">Miércoles</span>
+                    <span class="calendar__head-date">14 may</span>
+                  </div>
+                  <div class="calendar__head-cell" role="columnheader">
+                    <span class="calendar__head-day">Jueves</span>
+                    <span class="calendar__head-date">15 may</span>
+                  </div>
+                  <div class="calendar__head-cell" role="columnheader">
+                    <span class="calendar__head-day">Viernes</span>
+                    <span class="calendar__head-date">16 may</span>
+                  </div>
+                  <div class="calendar__head-cell" role="columnheader">
+                    <span class="calendar__head-day">Sábado</span>
+                    <span class="calendar__head-date">17 may</span>
+                  </div>
+                  <div class="calendar__head-cell" role="columnheader">
+                    <span class="calendar__head-day">Domingo</span>
+                    <span class="calendar__head-date">18 may</span>
+                  </div>
+                </div>
+                <div class="calendar__body" role="rowgroup">
+                  <div class="calendar__column" role="gridcell">
+                    <article class="calendar-event calendar-event--schedule">
+                      <span class="calendar-event__time">08:30 – 10:00</span>
+                      <span class="calendar-event__title">Clases de programación</span>
+                      <span class="calendar-event__meta">Aula virtual</span>
+                      <span class="calendar-event__notes">Repasar algoritmos básicos.</span>
+                    </article>
+                    <article class="calendar-event calendar-event--task-pending">
+                      <span class="calendar-event__time">17:30</span>
+                      <span class="calendar-event__title">Entrega bitácora UX</span>
+                      <span class="calendar-event__meta">Diseño interactivo</span>
+                      <span class="calendar-event__pill">Pendiente</span>
+                    </article>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <p class="calendar__empty">Añade tu clase o tarea</p>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <article class="calendar-event calendar-event--schedule">
+                      <span class="calendar-event__time">11:00 – 12:30</span>
+                      <span class="calendar-event__title">Club de lectura accesible</span>
+                      <span class="calendar-event__meta">Biblioteca central</span>
+                    </article>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <article class="calendar-event calendar-event--schedule">
+                      <span class="calendar-event__time">15:00 – 16:00</span>
+                      <span class="calendar-event__title">Tutoría de neurociencia</span>
+                      <span class="calendar-event__meta">Laboratorio 4</span>
+                      <span class="calendar-event__notes">Recordar preguntas y audios de apoyo.</span>
+                    </article>
+                    <article class="calendar-event calendar-event--task-in_progress">
+                      <span class="calendar-event__time">19:00</span>
+                      <span class="calendar-event__title">Preparar presentación de biología</span>
+                      <span class="calendar-event__meta">Biología celular</span>
+                      <span class="calendar-event__pill">En progreso</span>
+                    </article>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <article class="calendar-event calendar-event--task-completed">
+                      <span class="calendar-event__time">08:00</span>
+                      <span class="calendar-event__title">Resumen lectura inclusiva</span>
+                      <span class="calendar-event__meta">Pedagogía</span>
+                      <span class="calendar-event__pill">Completada</span>
+                    </article>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <p class="calendar__empty">Fin de semana libre</p>
+                  </div>
+                  <div class="calendar__column" role="gridcell">
+                    <p class="calendar__empty">Planifica un descanso</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <div class="preview-tab">
+          <span class="preview-tab__label">Recordatorios</span>
+          <section class="tab-panel" aria-labelledby="tab-reminders">
+            <section class="panel panel--with-sticker" data-sticker="Agenda de avisos" data-icon="🔔">
+              <header class="panel__header panel__header--split">
+                <div>
+                  <h2 id="reminders-heading" class="panel__title">Recordatorios programados</h2>
+                  <p class="panel__subtitle">
+                    Visualiza tus notificaciones por orden cronológico y mantén claros los próximos hitos.
+                  </p>
+                  <p class="panel__helper">Los avisos se enviarán a Gmail como tarjetas estilo Teams para que no pierdas detalle.</p>
+                </div>
+                <div class="panel__callout" aria-live="polite">
+                  <span class="panel__callout-label">Próximo aviso</span>
+                  <strong class="panel__callout-value">08:00</strong>
+                </div>
+              </header>
+
+              <form class="reminder-composer">
+                <div class="reminder-composer__grid">
+                  <label class="reminder-composer__label reminder-composer__label--wide" for="preview-reminder-title">
+                    <span>Título</span>
+                    <input id="preview-reminder-title" type="text" placeholder="Entrega de proyecto integrador" />
+                  </label>
+                  <label class="reminder-composer__label" for="preview-reminder-type">
+                    <span>Tipo</span>
+                    <select id="preview-reminder-type">
+                      <option>Tarea</option>
+                      <option>Enfoque</option>
+                      <option>Personal</option>
+                    </select>
+                  </label>
+                  <label class="reminder-composer__label" for="preview-reminder-datetime">
+                    <span>Fecha y hora</span>
+                    <input id="preview-reminder-datetime" type="datetime-local" value="2025-05-13T08:00" />
+                  </label>
+                  <label class="reminder-composer__label reminder-composer__label--wide" for="preview-reminder-description">
+                    <span>Notas (opcional)</span>
+                    <textarea
+                      id="preview-reminder-description"
+                      placeholder="Añade instrucciones para recordar el contexto."
+                    ></textarea>
+                  </label>
+                </div>
+                <div class="reminder-composer__footer">
+                  <p class="reminder-composer__hint">
+                    La plataforma te avisará con tiempo para que llegues a cada entrega con calma.
+                  </p>
+                  <div class="reminder-composer__actions">
+                    <button type="button" class="reminder-composer__submit">Agendar recordatorio</button>
+                  </div>
+                </div>
+              </form>
+
+              <div class="reminder-grid">
+                <div class="reminder-grid__list" role="list" aria-label="Lista de recordatorios programados">
+                  <article class="list-item" role="listitem">
+                    <div class="list-item__body">
+                      <span class="list-item__title">Entrega proyecto integrador</span>
+                      <span class="list-item__meta">Descripción cargada a plataforma</span>
+                      <span class="list-item__meta">13/05/2025 08:00</span>
+                    </div>
+                    <div class="list-item__actions">
+                      <span class="pill pill--outline">Gmail · estilo Teams</span>
+                    </div>
+                  </article>
+                  <article class="list-item" role="listitem">
+                    <div class="list-item__body">
+                      <span class="list-item__title">Reunión equipo foro</span>
+                      <span class="list-item__meta">14/05/2025 18:00</span>
+                    </div>
+                    <div class="list-item__actions">
+                      <span class="pill pill--outline">Outlook · Teams</span>
+                    </div>
+                  </article>
+                  <article class="list-item" role="listitem">
+                    <div class="list-item__body">
+                      <span class="list-item__title">Recordatorio de pausa activa</span>
+                      <span class="list-item__meta">15/05/2025 12:30</span>
+                    </div>
+                    <div class="list-item__actions">
+                      <span class="pill pill--outline">Gmail · estilo Teams</span>
+                    </div>
+                  </article>
+                </div>
+                <aside class="reminder-grid__aside" aria-label="Sugerencias para tus recordatorios">
+                  <h3 class="reminder-aside__title">Tips de organización</h3>
+                  <p class="reminder-aside__text">
+                    Agrupa los recordatorios por materias y añade descripciones breves. Así reconocerás cada pendiente de un
+                    vistazo.
+                  </p>
+                  <ul class="reminder-aside__tips">
+                    <li>Usa horarios similares para crear rutinas reconocibles.</li>
+                    <li>Configura avisos dobles cuando la entrega sea crítica.</li>
+                    <li>Apóyate en la pestaña de resúmenes para preparar materiales.</li>
+                  </ul>
+                </aside>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <div class="preview-tab">
+          <span class="preview-tab__label">Resúmenes</span>
+          <section class="tab-panel" aria-labelledby="tab-summary">
+            <section class="panel panel--with-sticker" data-sticker="Resumen exprés" data-icon="📝">
+              <header class="panel__header">
+                <div>
+                  <h2 id="summary-heading" class="panel__title">Gestor de resúmenes</h2>
+                  <p class="panel__subtitle">
+                    Sube un documento PDF, Word, PowerPoint o TXT o pega tu texto. Podrás escuchar el resumen o el contenido
+                    completo.
+                  </p>
+                </div>
+              </header>
+              <div class="summary">
+                <form class="summary__form">
+                  <label for="preview-summary-text" class="summary__label">Texto o notas</label>
+                  <textarea id="preview-summary-text" rows="6" placeholder="Pega aquí el contenido que quieres resumir"></textarea>
+                  <label for="preview-summary-sentences" class="summary__label">Longitud del resumen: 5 frases</label>
+                  <input id="preview-summary-sentences" type="range" min="1" max="8" value="5" />
+                  <div class="summary__upload">
+                    <span class="summary__label">Subir archivo</span>
+                    <input class="summary__file-input" id="preview-summary-file" type="file" />
+                    <label class="summary__upload-sticker" for="preview-summary-file" role="button" tabindex="0">
+                      <span class="summary__upload-icon" aria-hidden="true">📎</span>
+                      <span class="summary__upload-copy">
+                        <span class="summary__upload-title">Cargar archivo</span>
+                        <span class="summary__upload-subtitle">PDF, Word, PowerPoint o TXT de tus materias</span>
+                      </span>
+                    </label>
+                    <div class="summary__file-feedback">
+                      <p class="summary__file-name">Archivo listo: guia-ensayo.pdf</p>
+                      <button type="button" class="ghost-button summary__clear-file">Quitar archivo</button>
+                    </div>
+                  </div>
+                  <p class="summary__hint">Formatos compatibles: PDF, DOCX, PPTX, TXT.</p>
+                  <div class="summary-actions">
+                    <button type="button" class="primary">Generar resumen</button>
+                    <button type="button" class="ghost-button">Escuchar resumen</button>
+                    <button type="button" class="ghost-button">Escuchar texto completo</button>
+                    <button type="button" class="ghost-button">Detener voz</button>
+                  </div>
+                </form>
+                <div class="summary__result">
+                  <div class="summary__result-header">
+                    <h3 class="summary__result-title">Resultados del asistente</h3>
+                    <div class="summary__result-tabs" role="tablist" aria-label="Contenido del resumen">
+                      <button type="button" class="summary__result-tab is-active" role="tab" aria-selected="true">
+                        Resumen
+                      </button>
+                      <button type="button" class="summary__result-tab" role="tab" aria-selected="false">
+                        Texto completo
+                      </button>
+                    </div>
+                  </div>
+                  <div class="chip-grid" aria-label="Palabras clave destacadas">
+                    <span class="chip">Educación inclusiva</span>
+                    <span class="chip">Apoyos</span>
+                    <span class="chip">Participación</span>
+                  </div>
+                  <div class="summary__result-panel" role="tabpanel" aria-label="Resumen generado">
+                    <p class="summary__paragraph">
+                      El capítulo repasa los pilares de la educación inclusiva, destacando la planificación anticipada, el
+                      acompañamiento individual y el diseño de actividades multisensoriales para promover la participación.
+                    </p>
+                  </div>
+                  <div class="summary__result-panel summary__result-panel--original" role="tabpanel" aria-label="Texto completo">
+                    <p class="summary__paragraph summary__paragraph--scrollable">
+                      La educación inclusiva propone planificar con antelación los materiales y apoyos para cada estudiante.
+                      El texto explica cómo equilibrar descansos, recursos auditivos y visuales y seguimiento docente para
+                      sostener la atención. También ofrece ejemplos de rúbricas accesibles y recomendaciones para presentar
+                      la información con lenguaje claro, apoyos visuales y narraciones en audio para distintos estilos de
+                      aprendizaje.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <div class="preview-tab">
+          <span class="preview-tab__label">Ideas rápidas</span>
+          <section class="tab-panel" aria-labelledby="tab-ideas">
+            <section class="panel panel--support" aria-labelledby="preview-quick-heading">
+              <header class="panel__header panel__header--compact">
+                <div>
+                  <h2 id="preview-quick-heading" class="panel__title">Ideas rápidas</h2>
+                  <p class="panel__subtitle">
+                    Envía una idea directamente al gestor de resúmenes o inspírate para organizar tus sesiones.
+                  </p>
+                </div>
+                <span class="panel__badge" aria-hidden="true">✨</span>
+              </header>
+              <div class="quick-actions" role="list">
+                <button type="button" class="quick-action" role="listitem">
+                  Resumir capítulo de Historia para el examen del viernes
+                </button>
+                <button type="button" class="quick-action" role="listitem">
+                  Preparar guion de estudio con bloques de 25 minutos
+                </button>
+                <button type="button" class="quick-action" role="listitem">
+                  Organizar recordatorio para entregar el informe del laboratorio
+                </button>
+              </div>
+              <p class="quick-actions__hint">
+                Puedes ajustar el texto antes de generar el resumen o iniciar una sesión de foco.
+              </p>
+            </section>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
