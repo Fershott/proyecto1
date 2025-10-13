@@ -154,6 +154,7 @@
       </header>
 
       <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
+        <button type="button" class="tab-bar__button" role="tab" disabled>Iniciar sesión</button>
         <button type="button" class="tab-bar__button is-active" role="tab">Tareas</button>
         <button type="button" class="tab-bar__button" role="tab">Pomodoro</button>
         <button type="button" class="tab-bar__button" role="tab">Calendario</button>
@@ -163,6 +164,42 @@
       </nav>
 
       <main class="tab-panels">
+        <div class="preview-tab">
+          <span class="preview-tab__label">Iniciar sesión</span>
+          <section class="tab-panel tab-panel--login" aria-labelledby="tab-login">
+            <div class="auth-shell">
+              <div class="auth-card" role="dialog" aria-labelledby="preview-auth-title">
+                <div class="auth-card__header">
+                  <div class="auth-logo" aria-hidden="true">CC</div>
+                  <div>
+                    <p class="auth-eyebrow">Bienvenido a CogniCore</p>
+                    <h2 id="preview-auth-title" class="auth-title">Tu espacio organizado empieza aquí</h2>
+                    <p class="auth-subtitle">
+                      Accede con Google o Microsoft para enviar notificaciones a tu bandeja de entrada estudiantil y mantener tus recordatorios sincronizados.
+                    </p>
+                  </div>
+                </div>
+                <div class="auth-providers" role="list">
+                  <button type="button" class="auth-provider provider--google" role="listitem">
+                    <span class="auth-provider__icon" aria-hidden="true">G</span>
+                    <span>
+                      <strong>Continuar con Google</strong>
+                      <small>Conecta tu Gmail y recibe alertas instantáneas.</small>
+                    </span>
+                  </button>
+                  <button type="button" class="auth-provider provider--microsoft" role="listitem">
+                    <span class="auth-provider__icon" aria-hidden="true">M</span>
+                    <span>
+                      <strong>Continuar con Microsoft</strong>
+                      <small>Sincroniza recordatorios con Outlook y Teams.</small>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
         <div class="preview-tab">
           <span class="preview-tab__label">Tareas</span>
           <section class="tab-panel" aria-labelledby="tab-tasks">

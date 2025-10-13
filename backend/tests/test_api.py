@@ -398,7 +398,12 @@ def test_summary_file_endpoint(patched_storage):
     buffer = io.BytesIO(
         "La tecnología asistiva apoya a estudiantes con diferentes estilos de aprendizaje.".encode("utf-8")
     )
-    upload = UploadFile(filename="ayuda.txt", file=buffer, content_type="text/plain")
+    try:
+        upload = UploadFile(filename="ayuda.txt", file=buffer, content_type="text/plain")
+    except TypeError:  # pragma: no cover - compatibility with Starlette >= 0.38
+        from starlette.datastructures import Headers  # type: ignore
+
+        upload = UploadFile(buffer, filename="ayuda.txt", headers=Headers({"content-type": "text/plain"}))
     response = asyncio.run(main.create_summary(text=None, sentences=1, file=upload))
     assert "estudiantes" in response.original_text.lower()
     assert response.summary

@@ -337,6 +337,13 @@ textarea {
   color: var(--accent-strong);
 }
 
+.tab-bar__button[disabled],
+.tab-bar__button[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+}
+
 .tab-panels {
   display: flex;
   flex-direction: column;
@@ -345,6 +352,21 @@ textarea {
 
 .tab-panel[hidden] {
   display: none;
+}
+
+.tab-panel--login {
+  padding: 0;
+}
+
+.tab-panel--login .auth-shell {
+  min-height: auto;
+  border-radius: 26px;
+  padding: 40px 24px;
+  background: linear-gradient(135deg, #dbeafe, #ede9fe);
+}
+
+.tab-panel--login .auth-card {
+  margin: 0 auto;
 }
 
 .panel {
