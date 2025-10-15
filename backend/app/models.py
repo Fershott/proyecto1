@@ -112,6 +112,17 @@ class Session(SessionBase):
 
     id: int
 
+    def __eq__(self, other: object) -> bool:
+        """Compara sesiones por contenido para facilitar las pruebas."""
+        if not isinstance(other, Session):
+            return NotImplemented
+        return (
+            getattr(self, "id", None) == getattr(other, "id", None)
+            and getattr(self, "email", None) == getattr(other, "email", None)
+            and getattr(self, "provider", None) == getattr(other, "provider", None)
+            and getattr(self, "display_name", None) == getattr(other, "display_name", None)
+        )
+
 
 class SessionCreate(SessionBase):
     """Payload utilizado para registrar o iniciar sesión."""

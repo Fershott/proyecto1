@@ -3,7 +3,7 @@
 import json
 from datetime import datetime, time
 from pathlib import Path
-from typing import List
+from typing import Iterable, List
 
 from .models import (
     AuthProvider,
@@ -42,6 +42,16 @@ def _write_json(path: Path, data):
     """Escribe datos en JSON con codificación UTF-8 y formato legible."""
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _ensure_attributes(model, payload: dict, fields: Iterable[str]):
+    """Ajusta atributos faltantes cuando se usa el stub minimalista de pydantic."""
+    for field in fields:
+        if hasattr(model, field):
+            continue
+        if field in payload:
+            setattr(model, field, payload[field])
+    return model
 
 
 def load_tasks() -> List[Task]:
@@ -94,9 +104,17 @@ def load_reminders() -> List[Reminder]:
     reminders = []
     for item in raw:
         item["remind_at"] = datetime.fromisoformat(item["remind_at"])
-        if "delivery_provider" not in item:
-            item["delivery_provider"] = AuthProvider.GOOGLE.value
-        reminders.append(Reminder(**item))
+        provider_value = item.get("delivery_provider", AuthProvider.GOOGLE.value)
+        if not isinstance(provider_value, AuthProvider):
+            provider_value = AuthProvider(provider_value)
+        item["delivery_provider"] = provider_value
+        reminder = Reminder(**item)
+        _ensure_attributes(
+            reminder,
+            item,
+            ("id", "title", "description", "remind_at", "type", "delivery_provider"),
+        )
+        reminders.append(reminder)
     return reminders
 
 
@@ -106,7 +124,11 @@ def save_reminders(reminders: List[Reminder]) -> None:
     for reminder in reminders:
         data = reminder.dict()
         data["remind_at"] = reminder.remind_at.isoformat()
-        data["delivery_provider"] = reminder.delivery_provider.value
+        provider = reminder.delivery_provider
+        if isinstance(provider, AuthProvider):
+            data["delivery_provider"] = provider.value
+        else:
+            data["delivery_provider"] = str(provider)
         payload.append(data)
     _write_json(REMINDERS_FILE, payload)
 
@@ -180,7 +202,13 @@ def load_sessions() -> List[Session]:
     raw = _read_json(SESSIONS_FILE, [])
     sessions: List[Session] = []
     for item in raw:
-        sessions.append(Session(**item))
+        provider_value = item.get("provider", AuthProvider.GOOGLE.value)
+        if not isinstance(provider_value, AuthProvider):
+            provider_value = AuthProvider(provider_value)
+        item["provider"] = provider_value
+        session = Session(**item)
+        _ensure_attributes(session, item, ("id", "email", "provider", "display_name"))
+        sessions.append(session)
     return sessions
 
 
@@ -188,8 +216,14 @@ def save_sessions(sessions: List[Session]) -> None:
     """Guarda las sesiones activas serializando el proveedor como texto."""
     payload = []
     for session in sessions:
-        data = session.dict()
-        data["provider"] = session.provider.value
+        data = {"id": getattr(session, "id", None)}
+        provider = session.provider
+        if isinstance(provider, AuthProvider):
+            data["provider"] = provider.value
+        else:
+            data["provider"] = str(provider)
+        data["email"] = getattr(session, "email", "")
+        data["display_name"] = getattr(session, "display_name", "")
         payload.append(data)
     _write_json(SESSIONS_FILE, payload)
 
@@ -200,7 +234,17 @@ def load_users() -> List[User]:
     users: List[User] = []
     for item in raw:
         item["created_at"] = datetime.fromisoformat(item["created_at"])
-        users.append(User(**item))
+        provider_value = item.get("provider", AuthProvider.GOOGLE.value)
+        if not isinstance(provider_value, AuthProvider):
+            provider_value = AuthProvider(provider_value)
+        item["provider"] = provider_value
+        user = User(**item)
+        _ensure_attributes(
+            user,
+            item,
+            ("id", "email", "provider", "display_name", "created_at"),
+        )
+        users.append(user)
     return users
 
 
@@ -208,9 +252,19 @@ def save_users(users: List[User]) -> None:
     """Persiste la lista de usuarios en disco."""
     payload = []
     for user in users:
-        data = user.dict()
-        data["created_at"] = user.created_at.isoformat()
-        data["provider"] = user.provider.value
+        created_at = getattr(user, "created_at", None)
+        provider = user.provider
+        data = {
+            "id": getattr(user, "id", None),
+            "email": getattr(user, "email", ""),
+            "display_name": getattr(user, "display_name", ""),
+        }
+        if created_at is not None:
+            data["created_at"] = created_at.isoformat()
+        if isinstance(provider, AuthProvider):
+            data["provider"] = provider.value
+        else:
+            data["provider"] = str(provider)
         payload.append(data)
     _write_json(USERS_FILE, payload)
 
