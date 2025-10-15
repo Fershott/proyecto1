@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 import smtplib
-from datetime import datetime
+from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -45,7 +45,7 @@ def _write_to_outbox(message: EmailMessage) -> Path:
     """Guarda el correo generado en disco cuando no hay SMTP disponible."""
     outbox_dir = Path(os.getenv("COGNICORE_EMAIL_OUTBOX", DATA_DIR / "outbox"))
     outbox_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
     recipient = message["To"].replace("@", "_at_").replace("/", "_")
     file_path = outbox_dir / f"welcome_{timestamp}_{recipient}.eml"
     file_path.write_text(message.as_string(), encoding="utf-8")

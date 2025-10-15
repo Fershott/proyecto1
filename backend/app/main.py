@@ -11,7 +11,7 @@ mantenimiento por parte del equipo y asegurar que cualquier persona comprenda el
 objetivo de cada pieza de lógica sin necesidad de explorar otros archivos.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -74,6 +74,28 @@ ALLOWED_DOMAINS: dict[AuthProvider, tuple[str, ...]] = {
         "live.es",
     ),
 }
+
+
+def _ensure_utc(dt: datetime) -> datetime:
+    """Normaliza una marca de tiempo a UTC con información de zona horaria."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _model_copy(instance, **kwargs):
+    """Obtiene una copia del modelo compatible con pydantic v1 y v2."""
+    if hasattr(instance, "model_copy"):
+        return instance.model_copy(**kwargs)  # type: ignore[call-arg]
+    if hasattr(instance, "copy"):
+        return instance.copy(**kwargs)  # type: ignore[call-arg]
+    update = kwargs.get("update") or {}
+    payload = {
+        key: getattr(instance, key)
+        for key in getattr(instance, "__dict__", {})
+    }
+    payload.update(update)
+    return type(instance)(**payload)
 
 
 def _get_active_session() -> Session | None:
@@ -204,7 +226,7 @@ def register_user(payload: SessionCreate) -> Session:
         email=normalized_email,
         provider=payload.provider,
         display_name=display_name,
-        created_at=datetime.utcnow(),
+        created_at=_ensure_utc(datetime.now(timezone.utc)),
     )
     users.append(user)
     save_users(users)
@@ -254,7 +276,7 @@ def update_task_status(task_id: int, status: TaskStatus) -> Task:
     tasks = load_tasks()
     for index, existing in enumerate(tasks):
         if existing.id == task_id:
-            updated = existing.copy(update={"status": status})
+            updated = _model_copy(existing, update={"status": status})
             tasks[index] = updated
             save_tasks(tasks)
             return updated
@@ -287,7 +309,7 @@ def create_reminder(reminder: ReminderCreate) -> Reminder:
         id=reminder_id,
         title=reminder.title,
         description=reminder.description,
-        remind_at=reminder.remind_at,
+        remind_at=_ensure_utc(reminder.remind_at),
         type=reminder.type,
         delivery_provider=session.provider,
     )

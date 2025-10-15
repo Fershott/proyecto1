@@ -1,7 +1,7 @@
 """Módulo de persistencia basado en archivos JSON para CogniCore."""
 
 import json
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 from pathlib import Path
 from typing import Iterable, List
 
@@ -54,6 +54,25 @@ def _ensure_attributes(model, payload: dict, fields: Iterable[str]):
     return model
 
 
+def _ensure_utc(dt: datetime) -> datetime:
+    """Normaliza un datetime a UTC con zona horaria explícita."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _model_dump(model):
+    """Obtiene un diccionario compatible con pydantic 1 y 2."""
+    if hasattr(model, "model_dump"):
+        return model.model_dump()  # type: ignore[call-arg]
+    if hasattr(model, "dict"):
+        return model.dict()  # type: ignore[call-arg]
+    return {
+        key: getattr(model, key)
+        for key in getattr(model, "__dict__", {})
+    }
+
+
 def load_tasks() -> List[Task]:
     """Carga todas las tareas guardadas en disco."""
     raw = _read_json(TASKS_FILE, [])
@@ -69,7 +88,7 @@ def save_tasks(tasks: List[Task]) -> None:
     """Persiste la lista completa de tareas serializando fechas a ISO 8601."""
     payload = []
     for task in tasks:
-        data = task.dict()
+        data = _model_dump(task)
         if task.due_date:
             data["due_date"] = task.due_date.isoformat()
         payload.append(data)
@@ -91,7 +110,7 @@ def save_schedule(entries: List[ScheduleEntry]) -> None:
     """Guarda el horario semanal convirtiendo las horas a texto ISO."""
     payload = []
     for entry in entries:
-        data = entry.dict()
+        data = _model_dump(entry)
         data["start_time"] = entry.start_time.isoformat()
         data["end_time"] = entry.end_time.isoformat()
         payload.append(data)
@@ -103,7 +122,7 @@ def load_reminders() -> List[Reminder]:
     raw = _read_json(REMINDERS_FILE, [])
     reminders = []
     for item in raw:
-        item["remind_at"] = datetime.fromisoformat(item["remind_at"])
+        item["remind_at"] = _ensure_utc(datetime.fromisoformat(item["remind_at"]))
         provider_value = item.get("delivery_provider", AuthProvider.GOOGLE.value)
         if not isinstance(provider_value, AuthProvider):
             provider_value = AuthProvider(provider_value)
@@ -122,8 +141,8 @@ def save_reminders(reminders: List[Reminder]) -> None:
     """Escribe los recordatorios en disco incluyendo el proveedor como cadena."""
     payload = []
     for reminder in reminders:
-        data = reminder.dict()
-        data["remind_at"] = reminder.remind_at.isoformat()
+        data = _model_dump(reminder)
+        data["remind_at"] = _ensure_utc(reminder.remind_at).isoformat()
         provider = reminder.delivery_provider
         if isinstance(provider, AuthProvider):
             data["delivery_provider"] = provider.value
@@ -147,7 +166,7 @@ def save_focus_sessions(sessions: List[FocusSession]) -> None:
     """Persiste las sesiones de enfoque con sus marcas de tiempo en ISO."""
     payload = []
     for session in sessions:
-        data = session.dict()
+        data = _model_dump(session)
         data["completed_at"] = session.completed_at.isoformat()
         payload.append(data)
     _write_json(FOCUS_FILE, payload)
@@ -170,7 +189,7 @@ def load_stats() -> DashboardStats:
 
 def save_stats(stats: DashboardStats) -> None:
     """Guarda los indicadores agregados del tablero."""
-    _write_json(STATS_FILE, stats.dict())
+    _write_json(STATS_FILE, _model_dump(stats))
 
 
 def next_id(items: List) -> int:
@@ -185,7 +204,12 @@ def compute_dashboard_stats(tasks: List[Task], reminders: List[Reminder], sessio
     tasks_completed = sum(1 for task in tasks if task.status == TaskStatus.COMPLETED)
     focus_minutes = sum(session.duration_minutes for session in sessions)
     focus_hours = round(focus_minutes / 60, 1)
-    upcoming_reminders = sum(1 for reminder in reminders if reminder.remind_at > datetime.utcnow())
+    now_utc = datetime.now(timezone.utc)
+    upcoming_reminders = sum(
+        1
+        for reminder in reminders
+        if _ensure_utc(reminder.remind_at) > now_utc
+    )
 
     base = load_stats()
     return DashboardStats(
