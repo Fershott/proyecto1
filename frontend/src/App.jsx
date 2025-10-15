@@ -152,18 +152,28 @@ const App = () => {
     []
   )
 
+  const activateOfflineExperience = useCallback(
+    (overrides = {}) => {
+      const offlineSession = { ...fallbackData.session, ...overrides }
+      setIsOfflineMode(true)
+      setSession(offlineSession)
+      setStats({ ...fallbackData.stats })
+      setTasks([...fallbackData.tasks])
+      setReminders([...fallbackData.reminders])
+      setScheduleEntries([...fallbackData.schedule])
+      setSummary(FALLBACK_SUMMARY)
+      setOriginalText(FALLBACK_ORIGINAL_TEXT)
+      setKeywords([...FALLBACK_KEYWORDS])
+      setActiveTab('tasks')
+      return offlineSession
+    },
+    [fallbackData]
+  )
+
   // Activa datos demostrativos cuando la API no responde.
   const applyFallbackData = useCallback(() => {
-    setIsOfflineMode(true)
-    setSession({ ...fallbackData.session })
-    setStats({ ...fallbackData.stats })
-    setTasks([...fallbackData.tasks])
-    setReminders([...fallbackData.reminders])
-    setScheduleEntries([...fallbackData.schedule])
-    setSummary(FALLBACK_SUMMARY)
-    setOriginalText(FALLBACK_ORIGINAL_TEXT)
-    setKeywords([...FALLBACK_KEYWORDS])
-  }, [fallbackData])
+    activateOfflineExperience()
+  }, [activateOfflineExperience])
 
   // Restaura los valores iniciales antes de sincronizar con el backend.
   const resetCollections = useCallback(() => {
@@ -398,13 +408,7 @@ const App = () => {
   const handleLogin = useCallback(
     async ({ email, provider }) => {
       if (!isBackendReachable) {
-        setIsOfflineMode(true)
-        setSession({ ...fallbackData.session, email, provider })
-        setStats({ ...fallbackData.stats })
-        setTasks([...fallbackData.tasks])
-        setReminders([...fallbackData.reminders])
-        setScheduleEntries([...fallbackData.schedule])
-        setActiveTab('tasks')
+        activateOfflineExperience({ email, provider })
         return { success: true }
       }
 
@@ -434,10 +438,14 @@ const App = () => {
       } catch (error) {
         console.error('Error al iniciar sesión', error)
         setIsBackendReachable(false)
-        return { success: false, error: 'Ocurrió un problema al iniciar sesión.' }
+        activateOfflineExperience({ email, provider })
+        return {
+          success: true,
+          session: { ...fallbackData.session, email, provider }
+        }
       }
     },
-    [fallbackData, isBackendReachable]
+    [activateOfflineExperience, fallbackData.session, isBackendReachable]
   )
 
   // Registra a la primera persona del equipo y envía confirmaciones.
@@ -449,19 +457,11 @@ const App = () => {
       }
 
       if (!isBackendReachable) {
-        const localSession = {
-          ...fallbackData.session,
+        const localSession = activateOfflineExperience({
           email,
           provider,
           display_name: normalizedDisplay
-        }
-        setIsOfflineMode(true)
-        setSession(localSession)
-        setStats({ ...fallbackData.stats })
-        setTasks([...fallbackData.tasks])
-        setReminders([...fallbackData.reminders])
-        setScheduleEntries([...fallbackData.schedule])
-        setActiveTab('tasks')
+        })
         return { success: true, session: localSession }
       }
 
@@ -490,10 +490,18 @@ const App = () => {
       } catch (error) {
         console.error('Error al registrar la cuenta', error)
         setIsBackendReachable(false)
-        return { success: false, error: 'No se pudo registrar la cuenta. Verifica tu conexión.' }
+        const offlineSession = activateOfflineExperience({
+          email,
+          provider,
+          display_name: normalizedDisplay
+        })
+        return {
+          success: true,
+          session: offlineSession
+        }
       }
     },
-    [fallbackData, isBackendReachable]
+    [activateOfflineExperience, isBackendReachable]
   )
 
   // Cierra la sesión y limpia el estado compartido.
