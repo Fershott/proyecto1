@@ -8,9 +8,9 @@ import TaskList from './components/TaskList'
 import ReminderList from './components/ReminderList'
 import SummaryAssistant from './components/SummaryAssistant'
 import FocusTimer from './components/FocusTimer'
-import QuickNotes from './components/QuickNotes'
 import SchedulePlanner from './components/SchedulePlanner'
 import AuthGateway from './components/AuthGateway'
+import DisplayNamePrompt from './components/DisplayNamePrompt'
 
 const DEFAULT_STATS = {
   tasks_completed: 0,
@@ -51,9 +51,19 @@ const DASHBOARD_TABS = [
   { id: 'timer', label: 'Pomodoro' },
   { id: 'calendar', label: 'Calendario' },
   { id: 'reminders', label: 'Recordatorios' },
-  { id: 'summary', label: 'Resúmenes' },
-  { id: 'ideas', label: 'Ideas rápidas' }
+  { id: 'summary', label: 'Resúmenes' }
 ]
+
+const deriveFallbackName = (email) => {
+  if (!email) return ''
+  const prefix = email.split('@', 1)[0]
+  return prefix
+    .replace(/[-_.]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
 
 // Componente raíz que muestra la navegación y cada pestaña funcional.
 const App = () => {
@@ -77,7 +87,7 @@ const App = () => {
   const [originalText, setOriginalText] = useState('')
   const [keywords, setKeywords] = useState([])
   const [isSummarizing, setIsSummarizing] = useState(false)
-  const [presetSummaryText, setPresetSummaryText] = useState('')
+  const [isNamePromptOpen, setIsNamePromptOpen] = useState(false)
 
   const fallbackData = useMemo(
     () => ({
@@ -103,6 +113,11 @@ const App = () => {
       setOriginalText(FALLBACK_ORIGINAL_TEXT)
       setKeywords([...FALLBACK_KEYWORDS])
       setActiveTab('tasks')
+      const fallbackName = deriveFallbackName(offlineSession.email)
+      const shouldPrompt =
+        !offlineSession.display_name ||
+        offlineSession.display_name.toLowerCase() === fallbackName.toLowerCase()
+      setIsNamePromptOpen(shouldPrompt)
       return offlineSession
     },
     [fallbackData]
@@ -122,7 +137,6 @@ const App = () => {
     setSummary('')
     setOriginalText('')
     setKeywords([])
-    setPresetSummaryText('')
   }, [])
 
   // Mantiene sincronizado el modo oscuro con el DOM y el almacenamiento local.
@@ -162,6 +176,17 @@ const App = () => {
 
     fetchSession()
   }, [applyFallbackData])
+
+  useEffect(() => {
+    if (!session) {
+      setIsNamePromptOpen(false)
+      return
+    }
+    const fallbackName = deriveFallbackName(session.email)
+    const shouldPrompt =
+      Boolean(session.display_name) && session.display_name.toLowerCase() === fallbackName.toLowerCase()
+    setIsNamePromptOpen(shouldPrompt)
+  }, [session])
 
   useEffect(() => {
     if (!session) {
@@ -224,6 +249,96 @@ const App = () => {
     }
   }
 
+  // Registra una tarea nueva en el backend o en modo sin conexión.
+  const handleAddTask = useCallback(
+    async ({ title, course, dueDate, notes }) => {
+      const normalizedCourse = course.trim() || 'General'
+      const normalizedNotes = notes.trim() ? notes.trim() : null
+
+      if (isOfflineMode) {
+        const newTask = {
+          id: Date.now(),
+          title,
+          course: normalizedCourse,
+          due_date: dueDate ? new Date(dueDate).toISOString() : null,
+          status: 'pending',
+          notes: normalizedNotes,
+          tags: []
+        }
+        setTasks((prev) => [...prev, newTask])
+        return newTask
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/tasks`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: 0,
+            title,
+            course: normalizedCourse,
+            due_date: dueDate ? new Date(dueDate).toISOString() : null,
+            status: 'pending',
+            notes: normalizedNotes,
+            tags: []
+          })
+        })
+
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data?.detail || 'No se pudo crear la tarea. Inténtalo nuevamente.')
+        }
+        setTasks((prev) => [...prev, data])
+        return data
+      } catch (error) {
+        console.error('Error creando tarea', error)
+        alert(error.message || 'No se pudo crear la tarea. Inténtalo nuevamente.')
+        return null
+      }
+    },
+    [isOfflineMode]
+  )
+
+  // Persiste el nombre preferido una vez completado el inicio de sesión.
+  const handleDisplayNameSubmit = useCallback(
+    async (displayName) => {
+      if (!session) return
+
+      if (isOfflineMode || session.isMock) {
+        setSession((prev) => (prev ? { ...prev, display_name: displayName } : prev))
+        setIsNamePromptOpen(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/session/display-name`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ display_name: displayName })
+        })
+
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data?.detail || 'No se pudo guardar tu nombre preferido.')
+        }
+        setSession(data)
+        setIsNamePromptOpen(false)
+      } catch (error) {
+        console.error('Error actualizando el nombre para mostrar', error)
+        alert(error.message || 'No se pudo guardar tu nombre preferido. Intenta nuevamente.')
+      }
+    },
+    [session, isOfflineMode]
+  )
+
+  const handleDismissNamePrompt = useCallback(() => {
+    setIsNamePromptOpen(false)
+  }, [])
+
   // Gestiona el envío de archivos o texto al servicio de resúmenes.
   const handleSummaryUpload = async (payload) => {
     setIsSummarizing(true)
@@ -249,6 +364,7 @@ const App = () => {
         setOriginalText('')
         return
       }
+      setIsBackendReachable(true)
       setSummary(data.summary)
       setKeywords(data.highlighted_keywords)
       setOriginalText(data.original_text)
@@ -417,6 +533,7 @@ const App = () => {
     } finally {
       stopSpeaking()
       setSession(null)
+      setIsNamePromptOpen(false)
     }
   }, [isBackendReachable, isOfflineMode, resetCollections, stopSpeaking])
 
@@ -430,24 +547,14 @@ const App = () => {
     alert('¡Excelente! Tu sesión de enfoque ha terminado.')
   }, [])
 
-  // Envía una idea rápida al asistente de resúmenes.
-  const handleQuickSuggestion = useCallback((prompt) => {
-    setPresetSummaryText(prompt)
-    setActiveTab('summary')
-  }, [])
-
-  // Limpia la idea rápida una vez que fue usada.
-  const handlePresetConsumed = useCallback(() => {
-    setPresetSummaryText('')
-  }, [])
-
   // Permite autenticar en modo demostración cuando el backend está desconectado.
   const handleOfflineAuth = useCallback(
     ({ email, provider, displayName }) => {
+      const normalizedEmail = email || FALLBACK_SESSION.email
       activateOfflineExperience({
-        email: email || FALLBACK_SESSION.email,
+        email: normalizedEmail,
         provider: provider || FALLBACK_SESSION.provider,
-        display_name: displayName || FALLBACK_SESSION.display_name
+        display_name: displayName || deriveFallbackName(normalizedEmail)
       })
     },
     [activateOfflineExperience]
@@ -592,7 +699,12 @@ const App = () => {
           hidden={activeTab !== 'tasks'}
           className="tab-panel"
         >
-          <TaskList tasks={tasks} onMarkComplete={handleMarkComplete} />
+          <TaskList
+            tasks={tasks}
+            onMarkComplete={handleMarkComplete}
+            onAdd={handleAddTask}
+            isSessionActive={Boolean(session)}
+          />
         </section>
         <section
           id="panel-timer"
@@ -646,20 +758,15 @@ const App = () => {
             isLoading={isSummarizing}
             onSpeak={speakText}
             onStopSpeaking={stopSpeaking}
-            presetText={presetSummaryText}
-            onPresetConsumed={handlePresetConsumed}
           />
         </section>
-        <section
-          id="panel-ideas"
-          role="tabpanel"
-          aria-labelledby="tab-ideas"
-          hidden={activeTab !== 'ideas'}
-          className="tab-panel"
-        >
-          <QuickNotes onAdd={handleQuickSuggestion} />
-        </section>
       </main>
+      <DisplayNamePrompt
+        isOpen={isNamePromptOpen}
+        onClose={handleDismissNamePrompt}
+        onSubmit={handleDisplayNameSubmit}
+        suggestedName={session ? deriveFallbackName(session.email) : ''}
+      />
     </div>
   )
 }

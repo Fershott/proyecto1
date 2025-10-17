@@ -128,6 +128,12 @@ class SessionCreate(SessionBase):
     """Payload utilizado para registrar o iniciar sesión."""
 
 
+class DisplayNameUpdate(BaseModel):
+    """Solicitud para actualizar el nombre con el que se muestra la sesión."""
+
+    display_name: str
+
+
 class UserBase(BaseModel):
     """Atributos fundamentales de un perfil de CogniCore."""
 

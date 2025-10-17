@@ -1,7 +1,7 @@
 /**
  * Asistente de resúmenes con soporte para archivos, texto y lectura en voz alta.
  */
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 // Componente que concentra el flujo de carga, resumen y reproducción por voz.
 const SummaryAssistant = ({
@@ -12,25 +12,13 @@ const SummaryAssistant = ({
   isLoading,
   onSpeak,
   onStopSpeaking,
-  presetText,
-  onPresetConsumed
 }) => {
   const [text, setText] = useState('')
-  const [sentences, setSentences] = useState(6)
+  const [sentences, setSentences] = useState(7)
   const [selectedFile, setSelectedFile] = useState(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [activeResultTab, setActiveResultTab] = useState('summary')
   const fileInputRef = useRef(null)
-
-  // Carga sugerencias predeterminadas enviadas desde otras pestañas.
-  useEffect(() => {
-    if (presetText) {
-      setText(presetText)
-      setSelectedFile(null)
-      setSelectedFileName('')
-      onPresetConsumed?.()
-    }
-  }, [presetText, onPresetConsumed])
 
   // Cambia automáticamente la pestaña de resultado según lo disponible.
   useEffect(() => {
@@ -40,6 +28,14 @@ const SummaryAssistant = ({
       setActiveResultTab('original')
     }
   }, [summary, originalText])
+
+  const summarySegments = useMemo(() => {
+    if (!summary) return []
+    return summary
+      .split(/(?<=[.!?])\s+/)
+      .map((segment) => segment.trim())
+      .filter(Boolean)
+  }, [summary])
 
   // Valida que exista contenido y delega la petición de resumen al padre.
   const handleSubmit = (event) => {
@@ -233,7 +229,13 @@ const SummaryAssistant = ({
                 aria-labelledby="summary-result-tab"
                 className="summary__result-panel"
               >
-                <p className="summary__paragraph">{summary}</p>
+                <ol className="summary__bullets">
+                  {summarySegments.map((segment, index) => (
+                    <li key={`${segment}-${index}`} className="summary__bullet">
+                      {segment}
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
             {activeResultTab === 'original' && originalText && (

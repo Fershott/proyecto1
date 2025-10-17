@@ -157,6 +157,7 @@ from backend.app.models import (
     ScheduleEntry,
     Session,
     SessionCreate,
+    DisplayNameUpdate,
     Task,
     TaskStatus,
 )
@@ -284,6 +285,27 @@ def test_registration_and_session_flow(patched_storage, tmp_path):
     )
     assert logged.display_name == "Team Actualizado"
 
+
+def test_update_display_name_endpoint(patched_storage):
+    response = Response()
+    session = main.register_google(
+        SessionCreate(
+            email="estudiante.original@gmail.com",
+            provider=AuthProvider.GOOGLE,
+            display_name="",
+        ),
+        response,
+    )
+
+    assert session.display_name == "Estudiante Original"
+    assert response.status_code == 201
+
+    updated_session = main.update_display_name(
+        DisplayNameUpdate(display_name="Estudiante Personalizado"),
+    )
+
+    assert updated_session.display_name == "Estudiante Personalizado"
+    assert main.get_session().display_name == "Estudiante Personalizado"
 
 def test_reminder_requires_session(patched_storage):
     with pytest.raises(HTTPException) as excinfo:
@@ -578,6 +600,16 @@ def test_oauth_start_and_callback_flow(patched_storage):
     assert session is not None
     assert session.provider is AuthProvider.GOOGLE
     assert session.email == "estudiante@gmail.com"
+
+    # Permite registrar incluso si no se proporcionó un nombre antes del flujo OAuth.
+    nameless_register = main.start_google_oauth(
+        mode="register",
+        next="/panel",
+        stub_email="sin_nombre@gmail.com",
+    )
+    nameless_state = parse_qs(urlparse(nameless_register.headers["location"]).query)["state"][0]
+    nameless_result = asyncio.run(main.google_callback(code="stub-code", state=nameless_state))
+    assert nameless_result.status_code == 303
 
     main.clear_session()
 

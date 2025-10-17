@@ -150,6 +150,7 @@ const WeeklyCalendar = ({ scheduleEntries = [], tasks = [] }) => {
                       event.variant === 'task' && event.status ? ` calendar-event--task-${event.status}` : ''
                     }`}
                     aria-label={`${event.title} ${event.range}`}
+                    tabIndex={0}
                   >
                     <span className="calendar-event__time">{event.range}</span>
                     <span className="calendar-event__title">{event.title}</span>

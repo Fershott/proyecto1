@@ -1850,3 +1850,308 @@ body.theme-dark .auth-card__demo-hint {
     display: none;
   }
 }
+
+/* Estilos actualizados para el acceso simplificado */
+.auth-card__grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.auth-card__provider-card {
+  position: relative;
+  border-radius: 22px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: linear-gradient(140deg, rgba(79, 70, 229, 0.08), rgba(236, 72, 153, 0.06));
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 22px 40px rgba(79, 70, 229, 0.16);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+
+.auth-card__provider-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 48px rgba(79, 70, 229, 0.24);
+}
+
+.auth-card__provider-card--google {
+  background: linear-gradient(140deg, rgba(66, 133, 244, 0.14), rgba(52, 211, 153, 0.08));
+  border-color: rgba(66, 133, 244, 0.3);
+}
+
+.auth-card__provider-card--microsoft {
+  background: linear-gradient(140deg, rgba(5, 99, 193, 0.16), rgba(242, 80, 34, 0.12));
+  border-color: rgba(5, 99, 193, 0.32);
+}
+
+.auth-card__provider-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-card__provider-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.auth-card__provider-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.auth-card__provider-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.auth-card__provider-button {
+  flex: 1;
+  min-width: 140px;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 15px;
+  background: var(--accent);
+  color: var(--text-inverse);
+  box-shadow: 0 12px 22px rgba(79, 70, 229, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-card__provider-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px rgba(79, 70, 229, 0.32);
+}
+
+.auth-card__provider-button--secondary {
+  background: var(--surface);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  box-shadow: none;
+}
+
+.auth-card__provider-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-card__offline {
+  align-self: flex-start;
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-weight: 600;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.auth-card__offline:hover {
+  color: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+body.theme-dark .auth-card__provider-card {
+  background: linear-gradient(150deg, rgba(124, 58, 237, 0.28), rgba(37, 99, 235, 0.22));
+  border-color: rgba(148, 163, 184, 0.4);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.7);
+}
+
+body.theme-dark .auth-card__provider-button--secondary {
+  background: rgba(15, 23, 42, 0.75);
+  color: var(--text-inverse);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* Formulario de tareas */
+.task-form {
+  background: var(--surface-alt);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.task-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.task-form__label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.task-form__label textarea {
+  resize: vertical;
+}
+
+.task-form__label--wide {
+  grid-column: span 2;
+}
+
+.task-form__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-form__error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.task-form__submit {
+  border-radius: 999px;
+  padding: 10px 20px;
+  background: var(--accent-secondary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+body.theme-dark .task-form {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+/* Modal de nombre preferido */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.modal__content {
+  position: relative;
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 28px;
+  width: min(420px, 90vw);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.modal__subtitle {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal__label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+body.theme-dark .modal__content {
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+}
+
+/* Resultados del resumen */
+.summary__bullets {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.summary__bullet {
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.summary__result-panel--original {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.summary__paragraph--scrollable {
+  white-space: pre-line;
+}
+
+/* Eventos del calendario con animación */
+.calendar-event {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.calendar-event:hover,
+.calendar-event:focus-visible,
+.calendar-event:active {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 32px rgba(79, 70, 229, 0.2);
+}
+
+.calendar-event__title,
+.calendar-event__meta,
+.calendar-event__notes {
+  word-break: break-word;
+}
+
+.calendar__column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Ajustes para modo oscuro en formularios */
+body.theme-dark .task-form__submit {
+  background: var(--accent-secondary);
+  color: var(--text-inverse);
+}
+
+body.theme-dark .modal__backdrop {
+  background: rgba(15, 23, 42, 0.65);
+}
+
+/* Ajustes extra para inputs en modo oscuro */
+body.theme-dark input,
+body.theme-dark textarea,
+body.theme-dark select {
+  color: var(--text-primary);
+}
+

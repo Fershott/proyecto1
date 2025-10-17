@@ -4,11 +4,11 @@ Este documento resume cómo visualizar el diseño actual de CogniCore desde las 
 
 ## Maqueta del dashboard
 - **Ruta:** `frontend/preview/index.html`
-- **Descripción:** muestra las pestañas de Tareas, Pomodoro, Calendario semanal, Recordatorios, Resúmenes e Ideas rápidas con la paleta estudiantil y los componentes responsivos que se ajustan a escritorio.
+- **Descripción:** muestra las pestañas de Tareas, Pomodoro, Calendario semanal, Recordatorios y Resúmenes con la paleta estudiantil y los componentes responsivos que se ajustan a escritorio.
 
 ## Maqueta del login
 - **Ruta:** `frontend/preview/login.html`
-- **Descripción:** ilustra la pantalla inicial con acceso mediante Google o Microsoft, mostrando los mensajes sobre las notificaciones por correo que gestiona el backend.
+- **Descripción:** ilustra la pantalla inicial con tarjetas dedicadas a Google y Microsoft, destacando las opciones de iniciar sesión o crear cuenta y el aviso del saludo personalizado posterior al login.
 
 ## Cómo previsualizar
 1. Ubícate en la carpeta `frontend/preview`.

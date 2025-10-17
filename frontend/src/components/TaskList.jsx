@@ -1,7 +1,7 @@
 /**
- * Lista de tareas académicas con estados y acción rápida de completado.
+ * Lista de tareas académicas con formulario de alta y acciones rápidas.
  */
-import React from 'react'
+import React, { useState } from 'react'
 
 const statusClass = {
   completed: 'status-pill status-pill--completed',
@@ -16,7 +16,43 @@ const readableStatus = {
 }
 
 // Componente que presenta las tareas y permite marcarlas como finalizadas.
-const TaskList = ({ tasks = [], onMarkComplete }) => {
+const TaskList = ({ tasks = [], onMarkComplete, onAdd, isSessionActive = true }) => {
+  const [title, setTitle] = useState('')
+  const [course, setCourse] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [notes, setNotes] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    if (!onAdd || isSubmitting) return
+
+    if (!title.trim()) {
+      setError('Añade el título de la tarea para poder registrarla.')
+      return
+    }
+
+    setError('')
+    setIsSubmitting(true)
+
+    const created = await onAdd({
+      title: title.trim(),
+      course,
+      dueDate,
+      notes
+    })
+
+    setIsSubmitting(false)
+
+    if (created) {
+      setTitle('')
+      setCourse('')
+      setDueDate('')
+      setNotes('')
+    }
+  }
+
   return (
     <section
       className="panel panel--with-sticker"
@@ -32,6 +68,63 @@ const TaskList = ({ tasks = [], onMarkComplete }) => {
           <p className="panel__subtitle">Organiza tus materias y marca lo que avances para mantener la semana bajo control.</p>
         </div>
       </header>
+      <form className="task-form" onSubmit={handleSubmit}>
+        <div className="task-form__grid">
+          <label className="task-form__label task-form__label--wide" htmlFor="task-title">
+            <span>Título de la tarea</span>
+            <input
+              id="task-title"
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Ej. Ensayo de literatura"
+              disabled={!isSessionActive || !onAdd}
+            />
+          </label>
+          <label className="task-form__label" htmlFor="task-course">
+            <span>Materia</span>
+            <input
+              id="task-course"
+              type="text"
+              value={course}
+              onChange={(event) => setCourse(event.target.value)}
+              placeholder="Curso o proyecto"
+              disabled={!isSessionActive || !onAdd}
+            />
+          </label>
+          <label className="task-form__label" htmlFor="task-due">
+            <span>Fecha y hora</span>
+            <input
+              id="task-due"
+              type="datetime-local"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+              disabled={!isSessionActive || !onAdd}
+            />
+          </label>
+          <label className="task-form__label task-form__label--wide" htmlFor="task-notes">
+            <span>Notas (opcional)</span>
+            <textarea
+              id="task-notes"
+              rows={3}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Indicaciones, enlaces o apoyos que necesitas"
+              disabled={!isSessionActive || !onAdd}
+            />
+          </label>
+        </div>
+        <div className="task-form__footer">
+          {error && (
+            <span className="task-form__error" role="alert">
+              {error}
+            </span>
+          )}
+          <button type="submit" className="task-form__submit" disabled={!isSessionActive || !onAdd || isSubmitting}>
+            {isSubmitting ? 'Guardando…' : 'Añadir tarea'}
+          </button>
+        </div>
+      </form>
       <div className="list" role="list">
         {tasks.map((task) => (
           <article key={task.id} className="list-item" role="listitem">

@@ -25,6 +25,7 @@ from .mailer import send_registration_email, send_reminder_email
 from .models import (
     AuthProvider,
     DashboardStats,
+    DisplayNameUpdate,
     FocusSession,
     Reminder,
     ReminderCreate,
@@ -372,12 +373,6 @@ def start_google_oauth(
 ) -> RedirectResponse:
     """Inicia el flujo OAuth de Google redirigiendo al consentimiento oficial."""
 
-    if mode == "register" and not (display_name and display_name.strip()) and not is_stub_mode():
-        raise HTTPException(
-            status_code=400,
-            detail="Indica el nombre para mostrar antes de registrarte con Google.",
-        )
-
     state = _issue_oauth_state(AuthProvider.GOOGLE, mode, display_name, next, stub_email)
     client = get_oauth_client(AuthProvider.GOOGLE)
 
@@ -401,12 +396,6 @@ def start_microsoft_oauth(
     stub_email: Optional[str] = None,
 ) -> RedirectResponse:
     """Inicia el flujo OAuth con Microsoft Azure (Outlook/Teams)."""
-
-    if mode == "register" and not (display_name and display_name.strip()) and not is_stub_mode():
-        raise HTTPException(
-            status_code=400,
-            detail="Indica el nombre para mostrar antes de registrarte con Microsoft.",
-        )
 
     state = _issue_oauth_state(AuthProvider.MICROSOFT, mode, display_name, next, stub_email)
     client = get_oauth_client(AuthProvider.MICROSOFT)
@@ -552,6 +541,26 @@ async def _complete_oauth_callback(
 def clear_session() -> None:
     """Cierra la sesión activa eliminando el registro en disco."""
     save_sessions([])
+
+
+@app.patch("/session/display-name", response_model=Session)
+def update_display_name(payload: DisplayNameUpdate) -> Session:
+    """Actualiza el nombre para mostrar de la sesión y del perfil guardado."""
+
+    session = _require_session()
+    normalized_name = _normalize_display_name(payload.display_name, session.email)
+    users = load_users()
+
+    for index, user in enumerate(users):
+        if user.id != session.id:
+            continue
+
+        updated_user = _model_copy(user, update={"display_name": normalized_name})
+        users[index] = updated_user
+        save_users(users)
+        return _persist_session_for_user(updated_user)
+
+    raise HTTPException(status_code=404, detail="No se encontró el usuario asociado a la sesión activa")
 
 
 @app.get("/tasks", response_model=list[Task])
