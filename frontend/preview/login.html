@@ -202,42 +202,45 @@
       <section class="login-card" aria-labelledby="login-card-title">
         <button type="button" class="panel__mode-toggle login-card__mode-toggle">Modo oscuro</button>
         <div>
-          <h2 id="login-card-title" class="login-card__title">Accede con tu proveedor</h2>
+          <h2 id="login-card-title" class="login-card__title">Ingresa a CogniCore</h2>
           <p class="login-card__subtitle">
-            CogniCore conecta los avisos al correo que elijas. Solo aceptamos Google o Microsoft para garantizar una
-            experiencia sincronizada con Gmail u Outlook.
+            Usa tu cuenta educativa de Google o Microsoft para activar los recordatorios estilo Teams y recibir el correo de bienvenida.
           </p>
         </div>
         <div class="auth-card__mode" role="radiogroup" aria-label="Elige cómo continuar">
           <button type="button" role="radio" aria-checked="true" class="auth-card__mode-button is-active">
-            Soy nuevo/a
+            Ya tengo cuenta
           </button>
           <button type="button" role="radio" aria-checked="false" class="auth-card__mode-button">
-            Ya tengo cuenta
+            Soy nuevo/a
           </button>
         </div>
         <label class="auth-card__label" for="login-preview-email">
           <span>Correo educativo</span>
-          <input id="login-preview-email" type="email" value="sofia.student@gmail.com" disabled />
+          <input
+            id="login-preview-email"
+            type="email"
+            placeholder="tucuenta@university.edu"
+            aria-describedby="login-preview-helper"
+          />
         </label>
-        <label class="auth-card__label" for="login-preview-name">
-          <span>Nombre para mostrar</span>
-          <input id="login-preview-name" type="text" value="Sofía Student" disabled />
-        </label>
+        <p id="login-preview-helper" class="auth-card__demo-hint">
+          Cuando elijas "Soy nuevo/a" pediremos tu nombre para saludar en el tablero y enviaremos un correo de bienvenida.
+        </p>
         <div class="login-card__providers" role="group" aria-label="Proveedores disponibles">
           <button type="button" class="login-card__provider login-card__provider--google">
-            Registrarme con Google
-            <span>Recibe los recordatorios en Gmail con estilo Teams.</span>
+            Continuar con Google
+            <span>Recibirás avisos en Gmail como si fueran recordatorios de Teams.</span>
           </button>
           <button type="button" class="login-card__provider login-card__provider--microsoft">
-            Registrarme con Microsoft
-            <span>Sincroniza avisos con Outlook y Microsoft Teams.</span>
+            Continuar con Microsoft
+            <span>Sincroniza tus avisos con Outlook y Microsoft Teams.</span>
           </button>
         </div>
         <div class="login-card__footer">
           <strong>¿Qué sigue?</strong>
-          <span>Revisa tu correo para confirmar el registro y habilitar los avisos automáticos de Teams.</span>
-          <span>Después del registro podrás configurar tu semana y generar resúmenes accesibles con audio.</span>
+          <span>Confirma el mensaje de bienvenida para activar las notificaciones tipo Teams.</span>
+          <span>Después del registro verás el tablero con pestañas de tareas, calendario y resúmenes accesibles.</span>
         </div>
       </section>
     </div>

@@ -154,38 +154,42 @@
               <div class="auth-card" role="form">
                 <div class="auth-card__mode" role="radiogroup" aria-label="Elige cómo continuar">
                   <button type="button" role="radio" aria-checked="true" class="auth-card__mode-button is-active">
-                    Soy nuevo/a
+                    Ya tengo cuenta
                   </button>
                   <button type="button" role="radio" aria-checked="false" class="auth-card__mode-button">
-                    Ya tengo cuenta
+                    Soy nuevo/a
                   </button>
                 </div>
                 <label class="auth-card__label" for="preview-auth-email">
                   <span>Correo educativo</span>
-                  <input id="preview-auth-email" type="email" value="sofia.student@gmail.com" disabled />
+                  <input
+                    id="preview-auth-email"
+                    type="email"
+                    placeholder="tucuenta@university.edu"
+                    aria-describedby="preview-auth-helper"
+                  />
                 </label>
-                <label class="auth-card__label" for="preview-auth-name">
-                  <span>Nombre para mostrar</span>
-                  <input id="preview-auth-name" type="text" value="Sofía Student" disabled />
-                </label>
+                <p id="preview-auth-helper" class="auth-card__demo-hint">
+                  Si eliges "Soy nuevo/a" aparecerá el campo para tu nombre y enviaremos un correo de bienvenida.
+                </p>
                 <div class="auth-card__providers" role="group" aria-label="Proveedores de inicio de sesión">
-                  <button type="button" class="auth-card__provider auth-card__provider--google" disabled>
-                    Registrarme con Google
-                    <span class="auth-card__helper">Recibirás avisos en Gmail como recordatorios de Teams.</span>
+                  <button type="button" class="auth-card__provider auth-card__provider--google">
+                    Continuar con Google
+                    <span class="auth-card__helper">Recibirás avisos en Gmail como si fueran recordatorios de Teams.</span>
                   </button>
                   <button type="button" class="auth-card__provider auth-card__provider--microsoft">
-                    Registrarme con Microsoft
-                    <span class="auth-card__helper">Sincroniza los avisos con Outlook y Microsoft Teams.</span>
+                    Continuar con Microsoft
+                    <span class="auth-card__helper">Sincroniza tus avisos con Outlook y Microsoft Teams.</span>
                   </button>
                 </div>
                 <div class="auth-card__session" aria-live="polite">
                   <p class="auth-card__session-title">Sesión activa</p>
                   <p class="auth-card__session-text">Sofía Student · sofia.student@gmail.com</p>
-                  <span class="auth-card__session-pill">Notificaciones vía Gmail · estilo Teams</span>
+                  <span class="auth-card__session-pill">Notificaciones vía Gmail (estilo Teams)</span>
                   <button type="button" class="auth-card__logout">Cerrar sesión</button>
                 </div>
                 <p class="auth-card__feedback">
-                  Te enviamos un correo de bienvenida para confirmar tu registro. ¡Ya puedes planificar tu semana con CogniCore!
+                  ¡Registro completado! Revisa tu correo de bienvenida y organiza tu semana con CogniCore.
                 </p>
               </div>
             </section>
