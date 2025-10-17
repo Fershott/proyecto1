@@ -1,11 +1,11 @@
 /**
- * Panel de recordatorios que replica la experiencia de avisos estilo Teams.
+ * Panel de recordatorios que gestiona avisos por correo electrónico.
  */
 import React, { useState } from 'react'
 
 const providerLabels = {
-  google: 'Gmail · estilo Teams',
-  microsoft: 'Outlook · Teams'
+  google: 'Gmail',
+  microsoft: 'Outlook'
 }
 
 // Componente que permite crear y revisar recordatorios sincronizados.
@@ -41,7 +41,7 @@ const ReminderList = ({ reminders = [], onAdd, onUpdate, session }) => {
     if (!onAdd || isSubmitting) return
 
     if (!isSessionActive) {
-      setError('Inicia sesión con Google o Microsoft para programar avisos tipo Teams.')
+      setError('Inicia sesión con Google o Microsoft para programar avisos por correo.')
       return
     }
 
@@ -138,8 +138,8 @@ const ReminderList = ({ reminders = [], onAdd, onUpdate, session }) => {
           </p>
           <p className="panel__helper">
             {isSessionActive
-              ? `Se enviarán avisos a ${providerLabels[activeProvider]} para que sientas la experiencia de Teams.`
-              : 'Necesitas iniciar sesión para activar los avisos tipo Teams en tu correo.'}
+              ? `Se enviarán avisos a ${providerLabels[activeProvider]} con la hora y notas que definas.`
+              : 'Necesitas iniciar sesión para activar los avisos por correo.'}
           </p>
         </div>
         {nextReminder && (
@@ -162,7 +162,7 @@ const ReminderList = ({ reminders = [], onAdd, onUpdate, session }) => {
                 id="reminder-title"
                 type="text"
                 value={title}
-                placeholder="Entrega de proyecto integrador"
+                placeholder="Título del recordatorio"
                 onChange={(event) => setTitle(event.target.value)}
                 disabled={!isSessionActive}
               />
@@ -195,7 +195,7 @@ const ReminderList = ({ reminders = [], onAdd, onUpdate, session }) => {
               <textarea
                 id="reminder-description"
                 value={description}
-                placeholder="Añade instrucciones para recordar el contexto."
+                placeholder="Detalles para recordar el contexto"
                 onChange={(event) => setDescription(event.target.value)}
                 disabled={!isSessionActive}
               />

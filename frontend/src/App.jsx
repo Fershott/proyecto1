@@ -24,88 +24,25 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const FALLBACK_SESSION = {
   id: 0,
-  email: 'demo.student@cognicore.edu',
-  display_name: 'Demo Estudiante',
+  email: 'offline@cognicore.app',
+  display_name: 'Modo sin conexión',
   provider: 'google',
   isMock: true
 }
 
-const FALLBACK_STATS = {
-  tasks_completed: 8,
-  focus_hours: 12,
-  milestones_completed: 3,
-  upcoming_reminders: 4,
-  streak_days: 5
-}
+const FALLBACK_STATS = { ...DEFAULT_STATS }
 
-const FALLBACK_TASKS = [
-  {
-    id: 101,
-    title: 'Redactar resumen de neurociencia',
-    course: 'Neurociencia aplicada',
-    due_date: '2024-04-03T15:00:00',
-    status: 'pending',
-    notes: 'Integrar apuntes de clase y lecturas del capítulo 4.',
-    tags: ['lectura', 'estrategias']
-  },
-  {
-    id: 102,
-    title: 'Preparar exposición de historia del arte',
-    course: 'Historia del arte moderno',
-    due_date: '2024-04-05T09:30:00',
-    status: 'in_progress',
-    notes: 'Seleccionar referencias visuales para la presentación.',
-    tags: ['presentación']
-  }
-]
+const FALLBACK_TASKS = []
 
-const FALLBACK_REMINDERS = [
-  {
-    id: 201,
-    title: 'Entrega de ensayo de literatura',
-    description: 'Subir a plataforma antes de las 23:59.',
-    remind_at: '2024-04-02T18:00:00',
-    type: 'deadline',
-    delivery_provider: 'google'
-  },
-  {
-    id: 202,
-    title: 'Reunión de equipo de proyecto',
-    description: 'Videollamada para definir entregables.',
-    remind_at: '2024-04-04T16:30:00',
-    type: 'meeting',
-    delivery_provider: 'google'
-  }
-]
+const FALLBACK_REMINDERS = []
 
-const FALLBACK_SCHEDULE = [
-  {
-    id: 301,
-    title: 'Clase de Programación',
-    day_of_week: 1,
-    start_time: '10:00',
-    end_time: '12:00',
-    location: 'Lab 2',
-    description: 'Algoritmos aplicados a accesibilidad.'
-  },
-  {
-    id: 302,
-    title: 'Tutoría de Neuropsicología',
-    day_of_week: 3,
-    start_time: '14:00',
-    end_time: '15:30',
-    location: 'Sala 5',
-    description: 'Revisión de estrategias para TDAH.'
-  }
-]
+const FALLBACK_SCHEDULE = []
 
-const FALLBACK_SUMMARY =
-  'CogniCore detectó los puntos clave del documento y propone un plan de estudio en bloques cortos con descansos activos para mantener la concentración.'
+const FALLBACK_SUMMARY = ''
 
-const FALLBACK_ORIGINAL_TEXT =
-  'Este es un documento de ejemplo para mostrar cómo CogniCore sintetiza la información y sugiere estrategias de estudio accesibles cuando el backend no está disponible.'
+const FALLBACK_ORIGINAL_TEXT = ''
 
-const FALLBACK_KEYWORDS = ['concentración', 'bloques cortos', 'estrategias accesibles']
+const FALLBACK_KEYWORDS = []
 
 const LOGIN_TAB = { id: 'login', label: 'Acceso' }
 
@@ -331,7 +268,7 @@ const App = () => {
     }
   }
 
-  // Crea recordatorios tipo Teams y sincroniza el estado local.
+  // Crea recordatorios y sincroniza el estado local.
   const handleAddReminder = useCallback(
     async ({ title, description, remindAt, type }) => {
       if (!session) {

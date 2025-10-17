@@ -19,9 +19,9 @@ def _build_message(user: User) -> EmailMessage:
     message["From"] = os.getenv("COGNICORE_EMAIL_FROM", "no-reply@cognicore.local")
 
     provider_hint = (
-        "Hemos conectado tus recordatorios con Gmail para que recibas avisos estilo Teams."
+        "Hemos conectado tus recordatorios con Gmail para que recibas avisos por correo."
         if user.provider == AuthProvider.GOOGLE
-        else "Tus recordatorios se enviarán a Outlook y Microsoft Teams automáticamente."
+        else "Tus recordatorios se enviarán a Outlook con los detalles que configures."
     )
 
     body = f"""
@@ -98,9 +98,9 @@ def _build_reminder_message(reminder: Reminder, user: User) -> EmailMessage:
 
     scheduled_label = _normalize_to_utc(reminder.remind_at).strftime("%d de %B a las %H:%M UTC")
     provider_hint = (
-        "Recibirás este aviso en Gmail y Google Calendar con estilo Teams."
+        "Recibirás este aviso en Gmail y Google Calendar."
         if reminder.delivery_provider == AuthProvider.GOOGLE
-        else "El aviso aparecerá en Outlook y Microsoft Teams automáticamente."
+        else "El aviso aparecerá en tu bandeja de Outlook."
     )
 
     description_block = (

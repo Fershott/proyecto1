@@ -123,7 +123,7 @@ La API estará disponible en `http://localhost:8000`.
 ### Configurar el envío de correos de bienvenida y recordatorios
 
 Cuando un estudiante se registra por primera vez, CogniCore envía un correo de confirmación y cada recordatorio programado o
-actualizado genera un aviso adicional estilo Teams. De forma predeterminada los mensajes se guardan en
+actualizado genera un aviso adicional por correo. De forma predeterminada los mensajes se guardan en
 `backend/app/data/outbox/` para que puedas revisarlos sin credenciales externas. Si quieres enviar los correos reales desde
 Gmail u Outlook, define estas variables de entorno antes de arrancar FastAPI:
 
@@ -147,13 +147,12 @@ Con esa configuración los endpoints de registro y recordatorios enviarán los c
 - Si llamas a `/register` directamente se mantiene compatibilidad retroactiva, aunque las llamadas repetidas devuelven ahora
   una respuesta `200 OK` con la sesión existente en lugar de un error `409`.
 
-### Recordatorios editables con estilo Teams
+### Recordatorios editables con avisos por correo
 
 - Cada tarjeta de recordatorio puede editarse desde la interfaz y el backend expone `PATCH /reminders/{id}` para modificar
   título, notas, hora o tipo. El proveedor (`delivery_provider`) siempre coincide con la sesión activa para mantener la
-  sincronización con Gmail o Outlook.
-- Cada creación o actualización genera un correo en el `outbox` (o en tu SMTP configurado) que replica la experiencia tipo
-  Teams solicitada.
+  sincronización con Gmail u Outlook.
+- Cada creación o actualización genera un correo en el `outbox` (o en tu SMTP configurado) con la información del recordatorio.
 
 ### Pomodoro con alarma accesible
 
@@ -207,14 +206,14 @@ dedicadas a tareas, Pomodoro, calendario semanal, recordatorios, resúmenes y un
 
 Si solo deseas revisar la pantalla de acceso en alta fidelidad, abre
 `frontend/preview/login.html`. Esta maqueta aislada destaca la tarjeta de proveedores de
-Google y Microsoft, los mensajes sobre las notificaciones estilo Teams y el relato visual
+Google y Microsoft, los mensajes sobre las notificaciones por correo y el relato visual
 que orienta al estudiante antes de entrar al dashboard.
 
 ## Funcionalidades principales
 
 - **Pestañas por flujo**: tareas, Pomodoro, calendario semanal, recordatorios, resúmenes e ideas rápidas para evitar sobrecarga.
 - **Acceso con Google o Microsoft** para registrarse, recibir un correo de confirmación, activar las notificaciones vía Gmail u Outlook y gestionar la burbuja de perfil con cierre de sesión y modo oscuro (con modo demo cuando el backend no responde).
-- **Organizador semanal estilo Outlook** para crear, listar y eliminar bloques de horario estudiantil junto a las tareas con fecha.
+- **Organizador semanal estructurado** para crear, listar y eliminar bloques de horario estudiantil junto a las tareas con fecha.
 - **Gestión de tareas y recordatorios** con datos persistidos en archivos JSON y actualizaciones en tiempo real.
 - **Generador de resúmenes** a partir de texto pegado o archivos PDF/DOCX/PPTX/TXT, con pestañas para leer el resumen y el texto original completo.
 - **Palabras clave destacadas** para ayudar a la memorización.

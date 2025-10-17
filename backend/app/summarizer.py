@@ -129,10 +129,14 @@ def summarize_text(text: str, sentences: int = 5) -> List[str]:
     if not segments:
         return []
 
+    desired = max(1, min(sentences, len(segments)))
     words = re.findall(r"[\wáéíóúñ]+", text.lower())
     frequencies = Counter(word for word in words if word not in STOPWORDS)
+    if not frequencies:
+        return segments[:desired]
+
     scored = [(segment, _score_sentence(segment, frequencies)) for segment in segments]
-    top_segments = sorted(scored, key=lambda item: item[1], reverse=True)[:sentences]
+    top_segments = sorted(scored, key=lambda item: item[1], reverse=True)[:desired]
     ordered = sorted(top_segments, key=lambda item: segments.index(item[0]))
     return [segment for segment, _ in ordered]
 
@@ -159,13 +163,19 @@ async def generate_summary_from_file(file: UploadFile, sentences: int = 5) -> tu
         file.file.close()
 
     summary_segments = summarize_text(text, sentences)
-    return " ".join(summary_segments), text
+    if not summary_segments:
+        fallback_segments = _tokenize_sentences(text)[:max(1, sentences)]
+        summary_segments = fallback_segments if fallback_segments else [text.strip()]
+    return " ".join(segment for segment in summary_segments if segment), text
 
 
 async def summarize_from_text(text: str, sentences: int = 5) -> tuple[str, str]:
     """Crea un resumen a partir de texto crudo enviado por el cliente."""
     summary_segments = summarize_text(text, sentences)
-    return " ".join(summary_segments), text
+    if not summary_segments:
+        fallback_segments = _tokenize_sentences(text)[:max(1, sentences)]
+        summary_segments = fallback_segments if fallback_segments else [text.strip()]
+    return " ".join(segment for segment in summary_segments if segment), text
 
 
 async def generate_summary(file: UploadFile | None, text: str | None, sentences: int) -> tuple[str, str]:

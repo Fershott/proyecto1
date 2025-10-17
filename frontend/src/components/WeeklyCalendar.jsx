@@ -1,5 +1,5 @@
 /**
- * Calendario semanal que mezcla clases y tareas al estilo Outlook.
+ * Calendario semanal que mezcla clases y tareas en columnas organizadas.
  */
 import React, { useMemo } from 'react'
 
@@ -119,11 +119,11 @@ const WeeklyCalendar = ({ scheduleEntries = [], tasks = [] }) => {
             Calendario semanal
           </h2>
           <p className="panel__subtitle">
-            Visualiza tu semana como en Outlook: distribuye tareas por día y detecta espacios libres.
+            Visualiza tu semana: distribuye tareas por día y detecta espacios libres.
           </p>
         </div>
       </header>
-      <div className="calendar" role="grid" aria-label="Calendario semanal tipo Outlook">
+      <div className="calendar" role="grid" aria-label="Calendario semanal">
         <div className="calendar__head" role="row">
           {weekDays.map((day, index) => (
             <div key={WEEKDAY_LABELS[index]} className="calendar__head-cell" role="columnheader">

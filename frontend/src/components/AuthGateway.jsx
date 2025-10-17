@@ -7,11 +7,11 @@ import React, { useState } from 'react'
 const providerCopy = {
   google: {
     label: 'Continuar con Google',
-    helper: 'Recibirás avisos en Gmail como si fueran recordatorios de Teams.'
+    helper: 'Recibirás avisos en tu bandeja de Gmail.'
   },
   microsoft: {
     label: 'Continuar con Microsoft',
-    helper: 'Sincroniza tus avisos con Outlook y Teams.'
+    helper: 'Sincroniza tus avisos con Outlook.'
   }
 }
 
@@ -95,7 +95,7 @@ const AuthGateway = ({
             Ingresa a CogniCore
           </h2>
           <p className="panel__subtitle">
-            Usa tu cuenta de Google o Microsoft para que los recordatorios funcionen como Teams y te lleguen por correo.
+            Usa tu cuenta de Google o Microsoft para que los recordatorios lleguen directamente a tu correo.
           </p>
         </div>
         <button type="button" className="panel__mode-toggle" onClick={() => onToggleDarkMode?.()}>
@@ -143,7 +143,7 @@ const AuthGateway = ({
             <input
               id="auth-display-name"
               type="text"
-              placeholder="Ej. Sofía Estudiante"
+              placeholder="Nombre para mostrar"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               disabled={isLoading || (Boolean(session) && !isOfflineMode)}
@@ -179,7 +179,7 @@ const AuthGateway = ({
               {session.display_name} · {session.email}
             </p>
             <span className="auth-card__session-pill">
-              Notificaciones vía {session.provider === 'google' ? 'Gmail (estilo Teams)' : 'Outlook / Teams'}
+              Notificaciones vía {session.provider === 'google' ? 'Gmail' : 'Outlook'}
             </span>
             <button type="button" className="auth-card__logout" onClick={handleLogout}>
               Cerrar sesión

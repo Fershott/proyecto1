@@ -8,7 +8,7 @@ Este documento resume cómo visualizar el diseño actual de CogniCore desde las 
 
 ## Maqueta del login
 - **Ruta:** `frontend/preview/login.html`
-- **Descripción:** ilustra la pantalla inicial con acceso mediante Google o Microsoft, preparada para integrarse con las notificaciones estilo Teams que gestiona el backend.
+- **Descripción:** ilustra la pantalla inicial con acceso mediante Google o Microsoft, mostrando los mensajes sobre las notificaciones por correo que gestiona el backend.
 
 ## Cómo previsualizar
 1. Ubícate en la carpeta `frontend/preview`.

@@ -1,5 +1,5 @@
 /**
- * Planificador semanal que combina formulario y calendario estilo Outlook.
+ * Planificador semanal que combina formulario y calendario académico.
  */
 import React, { useMemo, useState } from 'react'
 import WeeklyCalendar from './WeeklyCalendar'
@@ -111,7 +111,7 @@ const SchedulePlanner = ({ schedule = [], tasks = [], onAdd, onDelete }) => {
             Organizador semanal
           </h2>
           <p className="panel__subtitle">
-            Crea tu horario clase por clase y visualízalo en un calendario tipo Outlook junto a tus tareas.
+            Crea tu horario clase por clase y visualízalo en un calendario semanal junto a tus tareas.
           </p>
         </div>
       </header>

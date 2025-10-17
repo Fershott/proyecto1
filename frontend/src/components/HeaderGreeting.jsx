@@ -9,9 +9,9 @@ const HeaderGreeting = ({ stats, session, onLogout, isDarkMode, onToggleDarkMode
   const greetingName = session?.display_name ? session.display_name.split(' ')[0] : 'explorador'
   const providerHint = session
     ? session.provider === 'google'
-      ? 'Los avisos llegarán a Gmail como recordatorios estilo Teams.'
-      : 'Tus avisos se enviarán a Outlook y Teams.'
-    : 'Inicia con Google o Microsoft para activar los avisos tipo Teams.'
+      ? 'Los avisos se enviarán a Gmail con la información de tus recordatorios.'
+      : 'Tus avisos se enviarán a Outlook con los detalles configurados.'
+    : 'Inicia con Google o Microsoft para activar los avisos por correo.'
 
   return (
     <header className="overview" aria-labelledby="welcome-heading">
@@ -26,7 +26,7 @@ const HeaderGreeting = ({ stats, session, onLogout, isDarkMode, onToggleDarkMode
               CogniCore
             </h1>
             <p className="overview__description">
-              Hola {greetingName}, organiza tu semana con un calendario estilo Outlook, recordatorios como Teams y resúmenes que
+              Hola {greetingName}, organiza tu semana con un calendario semanal, recordatorios por correo y resúmenes que
               puedes escuchar en voz alta cuando lo necesites.
             </p>
             <p className="overview__helper" aria-live="polite">
@@ -43,7 +43,7 @@ const HeaderGreeting = ({ stats, session, onLogout, isDarkMode, onToggleDarkMode
       </div>
       <div className="overview__stickers" aria-hidden="true">
         <span className="sticker sticker--pulse">Pomodoro flexible</span>
-        <span className="sticker sticker--accent">Recordatorios como Teams</span>
+        <span className="sticker sticker--accent">Recordatorios por correo</span>
         <span className="sticker sticker--outline">Audio + resúmenes claros</span>
       </div>
       <div className="overview__metrics" role="list" aria-label="Indicadores de progreso">

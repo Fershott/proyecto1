@@ -4,8 +4,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 
 const providerLabels = {
-  google: 'Gmail y Teams',
-  microsoft: 'Outlook y Teams'
+  google: 'Gmail',
+  microsoft: 'Outlook'
 }
 
 // Componente que gestiona el menú desplegable de la persona autenticada.
@@ -87,7 +87,7 @@ const ProfileMenu = ({ session, onLogout, isDarkMode, onToggleDarkMode }) => {
             <p className="profile-menu__title">{session.display_name}</p>
             <p className="profile-menu__email">{session.email}</p>
             <span className="profile-menu__badge">
-              Notificaciones vía {providerLabels[session.provider] || 'Teams'}
+              Notificaciones vía {providerLabels[session.provider] || 'correo'}
             </span>
           </div>
           <div className="profile-menu__actions">

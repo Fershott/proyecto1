@@ -47,7 +47,7 @@ class Task(BaseModel):
 
 
 class ScheduleEntry(BaseModel):
-    """Bloque de horario semanal mostrado en el calendario estilo Outlook."""
+    """Bloque de horario semanal mostrado en el calendario organizado de CogniCore."""
 
     id: int
     title: str
