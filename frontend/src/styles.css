@@ -91,6 +91,19 @@ select {
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
+body.theme-dark input,
+body.theme-dark textarea,
+body.theme-dark select {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(148, 163, 184, 0.45);
+  color: var(--text-primary);
+}
+
+body.theme-dark input::placeholder,
+body.theme-dark textarea::placeholder {
+  color: rgba(226, 232, 240, 0.7);
+}
+
 input:focus,
 textarea:focus,
 select:focus {
@@ -535,6 +548,43 @@ body.theme-dark .profile-menu__actions button:hover {
   background: rgba(124, 58, 237, 0.4);
 }
 
+body.theme-dark .list-item__action {
+  background: rgba(124, 58, 237, 0.24);
+  color: #f8fafc;
+}
+
+body.theme-dark .list-item__action:hover:not(:disabled) {
+  background: rgba(124, 58, 237, 0.38);
+}
+
+body.theme-dark .reminder-edit {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+@media (max-width: 720px) {
+  .list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .list-item__actions {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .reminder-edit__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reminder-edit__label--wide {
+    grid-column: span 1;
+  }
+}
+
 .panel--with-sticker::before {
   content: attr(data-icon);
   position: absolute;
@@ -902,6 +952,25 @@ body.theme-dark .profile-menu__actions button:hover {
   gap: 10px;
 }
 
+.list-item__action {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.list-item__action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(79, 70, 229, 0.18);
+}
+
+.list-item__action:disabled {
+  opacity: 0.5;
+}
+
 .status-pill {
   padding: 6px 12px;
   border-radius: 999px;
@@ -938,6 +1007,59 @@ body.theme-dark .profile-menu__actions button:hover {
 .primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 22px 38px rgba(79, 70, 229, 0.28);
+}
+
+.reminder-edit {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px dashed rgba(79, 70, 229, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.reminder-edit__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.reminder-edit__label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.reminder-edit__label span {
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+.reminder-edit__label--wide {
+  grid-column: span 2;
+}
+
+.reminder-edit__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.reminder-edit__buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.reminder-edit__error {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .ghost-button {
@@ -1485,6 +1607,7 @@ body.theme-dark .profile-menu__actions button:hover {
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 12px;
   overflow-x: auto;
+  padding-bottom: 8px;
 }
 
 .calendar__head-cell {
@@ -1521,6 +1644,7 @@ body.theme-dark .profile-menu__actions button:hover {
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 12px;
   overflow-x: auto;
+  padding-bottom: 12px;
 }
 
 .calendar__column {
@@ -1532,7 +1656,7 @@ body.theme-dark .profile-menu__actions button:hover {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 0;
+  min-width: 180px;
 }
 
 .calendar__empty {

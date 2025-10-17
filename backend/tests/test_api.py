@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 try:  # pragma: no cover - prefer real FastAPI if available
-    from fastapi import HTTPException
+    from fastapi import HTTPException, Response
 except ModuleNotFoundError:  # pragma: no cover - testing fallback
     fastapi_stub = types.ModuleType("fastapi")
 
@@ -49,11 +49,16 @@ except ModuleNotFoundError:  # pragma: no cover - testing fallback
     def File(default=None):  # pragma: no cover - placeholder
         return default
 
+    class Response:
+        def __init__(self):
+            self.status_code = 200
+
     fastapi_stub.HTTPException = HTTPException
     fastapi_stub.FastAPI = FastAPI
     fastapi_stub.Form = Form
     fastapi_stub.File = File
     fastapi_stub.UploadFile = UploadFile
+    fastapi_stub.Response = Response
 
     sys.modules["fastapi"] = fastapi_stub
 
@@ -68,7 +73,7 @@ except ModuleNotFoundError:  # pragma: no cover - testing fallback
     sys.modules["fastapi.middleware"] = middleware_module
     sys.modules["fastapi.middleware.cors"] = cors_module
 
-    from fastapi import HTTPException  # type: ignore  # noqa: E402
+    from fastapi import HTTPException, Response  # type: ignore  # noqa: E402
 
 try:  # pragma: no cover - prefer real pydantic if available
     from pydantic import BaseModel, Field  # type: ignore
@@ -147,7 +152,9 @@ from backend.app.models import (
     FocusSession,
     Reminder,
     ReminderCreate,
+    ReminderUpdate,
     ScheduleEntry,
+    Session,
     SessionCreate,
     Task,
     TaskStatus,
@@ -178,6 +185,14 @@ def patched_storage(tmp_path, monkeypatch):
     return storage
 
 
+def register_via_api(payload: SessionCreate) -> tuple[Session, Response]:
+    """Ejecuta el flujo de registro devolviendo la sesión y la respuesta HTTP."""
+
+    response = Response()
+    session = main.register_user(payload, response)
+    return session, response
+
+
 def test_health_check():
     assert main.health_check() == {"status": "ok"}
 
@@ -191,11 +206,12 @@ def test_registration_and_session_flow(patched_storage, tmp_path):
                 email="persona@yahoo.com",
                 provider=AuthProvider.GOOGLE,
                 display_name="Persona",
-            )
+            ),
+            Response(),
         )
     assert excinfo.value.status_code == 400
 
-    created = main.register_user(
+    created, register_response = register_via_api(
         SessionCreate(
             email="team.student@outlook.com",
             provider=AuthProvider.MICROSOFT,
@@ -208,9 +224,22 @@ def test_registration_and_session_flow(patched_storage, tmp_path):
     assert created.provider is AuthProvider.MICROSOFT
     assert created.display_name == "Team Student"
     assert main.get_session() == created
+    assert register_response.status_code == 201
 
     outbox_files = list((tmp_path / "outbox").glob("welcome_*.eml"))
     assert len(outbox_files) == 1
+
+    updated_session, repeated_response = register_via_api(
+        SessionCreate(
+            email="team.student@outlook.com",
+            provider=AuthProvider.MICROSOFT,
+            display_name="Team Actualizado",
+        )
+    )
+    assert updated_session.id == created.id
+    assert updated_session.display_name == "Team Actualizado"
+    assert repeated_response.status_code == 200
+    assert len(list((tmp_path / "outbox").glob("welcome_*.eml"))) == 1
 
     main.clear_session()
     assert main.get_session() is None
@@ -298,10 +327,8 @@ def test_task_crud_flow(patched_storage):
     with pytest.raises(HTTPException) as excinfo:
         main.update_task(99, updated)
     assert excinfo.value.status_code == 404
-
-
-def test_reminder_flow(patched_storage):
-    main.register_user(
+def test_reminder_flow(patched_storage, tmp_path):
+    register_via_api(
         SessionCreate(
             email="sofia.student@gmail.com",
             provider=AuthProvider.GOOGLE,
@@ -319,6 +346,28 @@ def test_reminder_flow(patched_storage):
     assert created.id == 1
     assert created.title == "Entrega de proyecto"
     assert created.delivery_provider == AuthProvider.GOOGLE
+
+    reminder_files = list((tmp_path / "outbox").glob("reminder_*.eml"))
+    assert len(reminder_files) == 1
+
+    updated = main.update_reminder(
+        created.id,
+        ReminderUpdate(
+            title="Entrega final actualizada",
+            description="Revisar rúbrica antes de enviar.",
+            remind_at=naive_utc() + timedelta(hours=4),
+        ),
+    )
+    assert updated.title == "Entrega final actualizada"
+    assert updated.description == "Revisar rúbrica antes de enviar."
+    assert updated.delivery_provider == AuthProvider.GOOGLE
+
+    reminder_files_after = list((tmp_path / "outbox").glob("reminder_*.eml"))
+    assert len(reminder_files_after) == 2
+
+    no_change = main.update_reminder(created.id, ReminderUpdate())
+    assert no_change.title == updated.title
+    assert len(list((tmp_path / "outbox").glob("reminder_*.eml"))) == 2
 
     reminders = main.list_reminders()
     assert len(reminders) == 1
@@ -397,7 +446,7 @@ def test_dashboard_stats(patched_storage):
         )
     )
 
-    main.register_user(
+    register_via_api(
         SessionCreate(
             email="luis.organizer@outlook.com",
             provider=AuthProvider.MICROSOFT,
@@ -449,6 +498,50 @@ def test_dashboard_stats(patched_storage):
     assert stats.milestones_completed == 7
     assert stats.upcoming_reminders == 1
     assert stats.streak_days == 5
+
+
+def test_provider_specific_endpoints(patched_storage):
+    response_google = Response()
+    session_google = main.register_google(
+        SessionCreate(
+            email="alumna.focus@gmail.com",
+            provider=AuthProvider.MICROSOFT,
+            display_name="Alumna Focus",
+        ),
+        response_google,
+    )
+    assert session_google.provider is AuthProvider.GOOGLE
+    assert response_google.status_code == 201
+
+    logged_google = main.login_google(
+        SessionCreate(
+            email="alumna.focus@gmail.com",
+            provider=AuthProvider.GOOGLE,
+            display_name="Alumna Actualizada",
+        )
+    )
+    assert logged_google.display_name == "Alumna Actualizada"
+
+    response_ms = Response()
+    session_ms = main.register_microsoft(
+        SessionCreate(
+            email="mentor.plan@outlook.com",
+            provider=AuthProvider.GOOGLE,
+            display_name="Mentor Plan",
+        ),
+        response_ms,
+    )
+    assert session_ms.provider is AuthProvider.MICROSOFT
+    assert response_ms.status_code == 201
+
+    logged_ms = main.login_microsoft(
+        SessionCreate(
+            email="mentor.plan@outlook.com",
+            provider=AuthProvider.MICROSOFT,
+            display_name="Mentor Planner",
+        )
+    )
+    assert logged_ms.display_name == "Mentor Planner"
 
 
 def test_summary_text_endpoint(patched_storage):

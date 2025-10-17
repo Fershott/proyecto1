@@ -156,3 +156,12 @@ class ReminderCreate(BaseModel):
     type: ReminderType = ReminderType.TASK
 
 
+class ReminderUpdate(BaseModel):
+    """Permite actualizar campos puntuales de un recordatorio existente."""
+
+    title: Optional[str] = None
+    description: Optional[str] = None
+    remind_at: Optional[datetime] = None
+    type: Optional[ReminderType] = None
+
+

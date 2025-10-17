@@ -11,20 +11,22 @@ mantenimiento por parte del equipo y asegurar que cualquier persona comprenda el
 objetivo de cada pieza de lógica sin necesidad de explorar otros archivos.
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import summarizer
-from .mailer import send_registration_email
+from .mailer import send_registration_email, send_reminder_email
 from .models import (
     AuthProvider,
     DashboardStats,
     FocusSession,
     Reminder,
     ReminderCreate,
+    ReminderUpdate,
     ScheduleEntry,
     Session,
     SessionCreate,
@@ -53,6 +55,8 @@ from .storage import (
 )
 
 app = FastAPI(title="Cognicore API", version="1.0.0")
+
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -151,6 +155,21 @@ def _find_user(email: str) -> User | None:
     return None
 
 
+def _send_reminder_notification(reminder: Reminder) -> None:
+    """Envía el correo del recordatorio y registra errores sin interrumpir la API."""
+
+    session = _get_active_session()
+    if session is None:
+        return
+    user = _find_user(session.email)
+    if user is None:
+        return
+    try:
+        send_reminder_email(reminder, user)
+    except Exception as exc:  # noqa: BLE001 - queremos registrar fallos inesperados
+        logger.warning("No se pudo enviar el correo del recordatorio: %s", exc)
+
+
 def _persist_session_for_user(user: User) -> Session:
     """Crea y guarda la sesión activa basada en el usuario proporcionado."""
     session = Session(
@@ -211,16 +230,48 @@ def login(payload: SessionCreate) -> Session:
     return _persist_session_for_user(user)
 
 
-@app.post("/register", response_model=Session, status_code=201)
-def register_user(payload: SessionCreate) -> Session:
+@app.post("/auth/google/login", response_model=Session)
+def login_google(payload: SessionCreate) -> Session:
+    """Inicia sesión obligando a que el proveedor sea Google."""
+
+    enforced = _enforce_provider(payload, AuthProvider.GOOGLE)
+    return login(enforced)
+
+
+@app.post("/auth/microsoft/login", response_model=Session)
+def login_microsoft(payload: SessionCreate) -> Session:
+    """Inicia sesión obligando a que el proveedor sea Microsoft."""
+
+    enforced = _enforce_provider(payload, AuthProvider.MICROSOFT)
+    return login(enforced)
+
+
+def _register_payload(payload: SessionCreate, response: Response) -> Session:
     """Registra un nuevo usuario y envía el correo de bienvenida."""
     _validate_email_provider(payload.email, payload.provider)
     normalized_email = _normalize_email(payload.email)
-    if _find_user(normalized_email) is not None:
-        raise HTTPException(status_code=409, detail="Ya existe una cuenta con este correo.")
+    display_name = _normalize_display_name(payload.display_name, normalized_email)
+
+    existing = _find_user(normalized_email)
+    if existing is not None:
+        if existing.provider != payload.provider:
+            raise HTTPException(
+                status_code=409,
+                detail="El correo ya está registrado con otro proveedor. Elige el servicio correcto.",
+            )
+
+        if existing.display_name != display_name:
+            users = load_users()
+            for index, user in enumerate(users):
+                if user.id == existing.id:
+                    users[index] = _model_copy(user, update={"display_name": display_name})
+                    existing = users[index]
+                    break
+            save_users(users)
+        response.status_code = 200
+        return _persist_session_for_user(existing)
 
     users = load_users()
-    display_name = _normalize_display_name(payload.display_name, normalized_email)
     user = User(
         id=next_id(users),
         email=normalized_email,
@@ -231,8 +282,38 @@ def register_user(payload: SessionCreate) -> Session:
     users.append(user)
     save_users(users)
 
+    response.status_code = 201
     send_registration_email(user)
     return _persist_session_for_user(user)
+
+
+def _enforce_provider(payload: SessionCreate, provider: AuthProvider) -> SessionCreate:
+    """Crea un nuevo payload asegurando que el proveedor coincida con el endpoint."""
+
+    return SessionCreate(email=payload.email, provider=provider, display_name=payload.display_name)
+
+
+@app.post("/register", response_model=Session, status_code=201)
+def register_user(payload: SessionCreate, response: Response) -> Session:
+    """Endpoint genérico compatible con clientes antiguos."""
+
+    return _register_payload(payload, response)
+
+
+@app.post("/auth/google/register", response_model=Session, status_code=201)
+def register_google(payload: SessionCreate, response: Response) -> Session:
+    """Registra una cuenta garantizando que el proveedor sea Google."""
+
+    enforced = _enforce_provider(payload, AuthProvider.GOOGLE)
+    return _register_payload(enforced, response)
+
+
+@app.post("/auth/microsoft/register", response_model=Session, status_code=201)
+def register_microsoft(payload: SessionCreate, response: Response) -> Session:
+    """Registra una cuenta garantizando que el proveedor sea Microsoft."""
+
+    enforced = _enforce_provider(payload, AuthProvider.MICROSOFT)
+    return _register_payload(enforced, response)
 
 
 @app.delete("/session", status_code=204)
@@ -315,6 +396,7 @@ def create_reminder(reminder: ReminderCreate) -> Reminder:
     )
     reminders.append(new_reminder)
     save_reminders(reminders)
+    _send_reminder_notification(new_reminder)
     return new_reminder
 
 
@@ -326,6 +408,44 @@ def delete_reminder(reminder_id: int) -> None:
     if len(updated) == len(reminders):
         raise HTTPException(status_code=404, detail="Recordatorio no encontrado")
     save_reminders(updated)
+
+
+@app.patch("/reminders/{reminder_id}", response_model=Reminder)
+def update_reminder(reminder_id: int, update: ReminderUpdate) -> Reminder:
+    """Permite ajustar título, notas, hora o tipo de un recordatorio."""
+
+    session = _require_session()
+    reminders = load_reminders()
+    for index, existing in enumerate(reminders):
+        if existing.id != reminder_id:
+            continue
+
+        changes: dict[str, object] = {}
+        if update.title is not None:
+            changes["title"] = update.title
+        if update.description is not None:
+            changes["description"] = update.description
+        if update.remind_at is not None:
+            changes["remind_at"] = _ensure_utc(update.remind_at)
+        if update.type is not None:
+            changes["type"] = update.type
+
+        if not changes:
+            return existing
+
+        updated_reminder = _model_copy(
+            existing,
+            update={
+                **changes,
+                "delivery_provider": session.provider,
+            },
+        )
+        reminders[index] = updated_reminder
+        save_reminders(reminders)
+        _send_reminder_notification(updated_reminder)
+        return updated_reminder
+
+    raise HTTPException(status_code=404, detail="Recordatorio no encontrado")
 
 
 @app.get("/schedule", response_model=list[ScheduleEntry])

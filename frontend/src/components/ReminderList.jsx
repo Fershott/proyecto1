@@ -9,13 +9,20 @@ const providerLabels = {
 }
 
 // Componente que permite crear y revisar recordatorios sincronizados.
-const ReminderList = ({ reminders = [], onAdd, session }) => {
+const ReminderList = ({ reminders = [], onAdd, onUpdate, session }) => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
   const [type, setType] = useState('task')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editScheduledAt, setEditScheduledAt] = useState('')
+  const [editType, setEditType] = useState('task')
+  const [editError, setEditError] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const isSessionActive = Boolean(session)
   const activeProvider = session?.provider || 'google'
@@ -57,6 +64,54 @@ const ReminderList = ({ reminders = [], onAdd, session }) => {
 
     if (created) {
       resetForm()
+    }
+  }
+
+  // Abre el formulario de edición con los valores actuales del recordatorio.
+  const handleEditStart = (reminder) => {
+    setEditingId(reminder.id)
+    setEditTitle(reminder.title)
+    setEditDescription(reminder.description || '')
+    setEditType(reminder.type || 'task')
+    const isoValue = new Date(reminder.remind_at).toISOString().slice(0, 16)
+    setEditScheduledAt(isoValue)
+    setEditError('')
+  }
+
+  // Cancela la edición y limpia el estado temporal.
+  const handleEditCancel = () => {
+    setEditingId(null)
+    setEditError('')
+  }
+
+  // Envía al padre los cambios solicitados sobre un recordatorio.
+  const handleEditSubmit = async (event) => {
+    event.preventDefault()
+    if (!editingId || !onUpdate || isUpdating) return
+
+    if (!editTitle.trim() || !editScheduledAt) {
+      setEditError('Indica título y fecha para actualizar el recordatorio.')
+      return
+    }
+
+    const isoDate = new Date(editScheduledAt)
+    if (Number.isNaN(isoDate.getTime())) {
+      setEditError('Elige una fecha y hora válidas.')
+      return
+    }
+
+    setIsUpdating(true)
+    const updated = await onUpdate(editingId, {
+      title: editTitle.trim(),
+      description: editDescription.trim() ? editDescription.trim() : null,
+      remindAt: isoDate.toISOString(),
+      type: editType
+    })
+    setIsUpdating(false)
+
+    if (updated) {
+      setEditingId(null)
+      setEditError('')
     }
   }
 
@@ -180,7 +235,74 @@ const ReminderList = ({ reminders = [], onAdd, session }) => {
                 <span className="pill pill--outline">
                   {providerLabels[reminder.delivery_provider] || 'Notificación'}
                 </span>
+                <button
+                  type="button"
+                  className="list-item__action"
+                  onClick={() => handleEditStart(reminder)}
+                  disabled={!isSessionActive}
+                >
+                  Editar
+                </button>
               </div>
+              {editingId === reminder.id && (
+                <form className="reminder-edit" onSubmit={handleEditSubmit}>
+                  <div className="reminder-edit__grid">
+                    <label className="reminder-edit__label">
+                      <span>Título</span>
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(event) => setEditTitle(event.target.value)}
+                        disabled={isUpdating}
+                      />
+                    </label>
+                    <label className="reminder-edit__label">
+                      <span>Tipo</span>
+                      <select
+                        value={editType}
+                        onChange={(event) => setEditType(event.target.value)}
+                        disabled={isUpdating}
+                      >
+                        <option value="task">Tarea</option>
+                        <option value="focus">Enfoque</option>
+                        <option value="personal">Personal</option>
+                      </select>
+                    </label>
+                    <label className="reminder-edit__label">
+                      <span>Fecha y hora</span>
+                      <input
+                        type="datetime-local"
+                        value={editScheduledAt}
+                        onChange={(event) => setEditScheduledAt(event.target.value)}
+                        disabled={isUpdating}
+                      />
+                    </label>
+                    <label className="reminder-edit__label reminder-edit__label--wide">
+                      <span>Notas</span>
+                      <textarea
+                        value={editDescription}
+                        onChange={(event) => setEditDescription(event.target.value)}
+                        disabled={isUpdating}
+                      />
+                    </label>
+                  </div>
+                  <div className="reminder-edit__actions">
+                    {editError && (
+                      <span className="reminder-edit__error" role="alert">
+                        {editError}
+                      </span>
+                    )}
+                    <div className="reminder-edit__buttons">
+                      <button type="button" className="ghost-button" onClick={handleEditCancel} disabled={isUpdating}>
+                        Cancelar
+                      </button>
+                      <button type="submit" className="primary" disabled={isUpdating}>
+                        {isUpdating ? 'Actualizando...' : 'Guardar cambios'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
             </article>
           ))}
           {formattedReminders.length === 0 && (

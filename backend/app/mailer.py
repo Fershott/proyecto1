@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
-from .models import AuthProvider, User
+from .models import AuthProvider, Reminder, User
 from .storage import DATA_DIR
 
 
@@ -41,13 +41,13 @@ El equipo de CogniCore
     return message
 
 
-def _write_to_outbox(message: EmailMessage) -> Path:
+def _write_to_outbox(message: EmailMessage, prefix: str = "message") -> Path:
     """Guarda el correo generado en disco cuando no hay SMTP disponible."""
     outbox_dir = Path(os.getenv("COGNICORE_EMAIL_OUTBOX", DATA_DIR / "outbox"))
     outbox_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
     recipient = message["To"].replace("@", "_at_").replace("/", "_")
-    file_path = outbox_dir / f"welcome_{timestamp}_{recipient}.eml"
+    file_path = outbox_dir / f"{prefix}_{timestamp}_{recipient}.eml"
     file_path.write_text(message.as_string(), encoding="utf-8")
     return file_path
 
@@ -63,11 +63,80 @@ def send_registration_email(user: User) -> Path | None:
     smtp_host = os.getenv("COGNICORE_SMTP_HOST")
 
     if not smtp_host:
-        return _write_to_outbox(message)
+        return _write_to_outbox(message, prefix="welcome")
 
     smtp_port = int(os.getenv("COGNICORE_SMTP_PORT", "587"))
     smtp_user = os.getenv("COGNICORE_SMTP_USER")
     smtp_password = os.getenv("COGNICORE_SMTP_PASSWORD", "")
+    use_tls = os.getenv("COGNICORE_SMTP_USE_TLS", "true").lower() != "false"
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        if use_tls:
+            server.starttls()
+        if smtp_user:
+            server.login(smtp_user, smtp_password)
+        server.send_message(message)
+
+    return None
+
+
+def _normalize_to_utc(dt: datetime) -> datetime:
+    """Asegura que la fecha cuente con información de zona horaria."""
+
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _build_reminder_message(reminder: Reminder, user: User) -> EmailMessage:
+    """Construye un correo con detalles del recordatorio programado."""
+
+    message = EmailMessage()
+    message["Subject"] = f"Recordatorio programado: {reminder.title}"
+    message["To"] = user.email
+    message["From"] = os.getenv("COGNICORE_EMAIL_FROM", "no-reply@cognicore.local")
+
+    scheduled_label = _normalize_to_utc(reminder.remind_at).strftime("%d de %B a las %H:%M UTC")
+    provider_hint = (
+        "Recibirás este aviso en Gmail y Google Calendar con estilo Teams."
+        if reminder.delivery_provider == AuthProvider.GOOGLE
+        else "El aviso aparecerá en Outlook y Microsoft Teams automáticamente."
+    )
+
+    description_block = (
+        f"\n\nNotas: {reminder.description.strip()}"
+        if reminder.description
+        else ""
+    )
+
+    body = f"""
+Hola {user.display_name},
+
+Guardamos tu recordatorio "{reminder.title}" para el {scheduled_label}.
+
+{provider_hint}{description_block}
+
+Puedes editar o cancelar el aviso en CogniCore cuando quieras.
+
+Equipo CogniCore
+""".strip()
+
+    message.set_content(body)
+    return message
+
+
+def send_reminder_email(reminder: Reminder, user: User) -> Path | None:
+    """Envía un aviso por correo cuando se programa o actualiza un recordatorio."""
+
+    message = _build_reminder_message(reminder, user)
+    smtp_host = os.getenv("COGNICORE_SMTP_HOST")
+
+    if not smtp_host:
+        return _write_to_outbox(message, prefix="reminder")
+
+    smtp_port = int(os.getenv("COGNICORE_SMTP_PORT", "587"))
+    smtp_user = os.getenv("COGNICORE_SMTP_USER")
+    smtp_password = os.getenv("COGNICORE_SMTP_PASSWORD", "" )
     use_tls = os.getenv("COGNICORE_SMTP_USE_TLS", "true").lower() != "false"
 
     with smtplib.SMTP(smtp_host, smtp_port) as server:

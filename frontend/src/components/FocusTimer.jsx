@@ -1,7 +1,7 @@
 /**
  * Temporizador Pomodoro adaptable a distintos ritmos de estudio.
  */
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 const PRESET_MINUTES = [15, 25, 45]
 
@@ -11,6 +11,43 @@ const FocusTimer = ({ onSessionComplete }) => {
   const [secondsRemaining, setSecondsRemaining] = useState(focusMinutes * 60)
   const [isRunning, setIsRunning] = useState(false)
   const intervalRef = useRef(null)
+  const audioContextRef = useRef(null)
+
+  const ensureAudioContext = useCallback(async () => {
+    if (typeof window === 'undefined') return null
+    const AudioContext = window.AudioContext || window.webkitAudioContext
+    if (!AudioContext) return null
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext()
+    }
+    const context = audioContextRef.current
+    if (context.state === 'suspended') {
+      try {
+        await context.resume()
+      } catch (error) {
+        console.warn('No se pudo activar el audio del temporizador', error)
+      }
+    }
+    return context
+  }, [])
+
+  const triggerAlarm = useCallback(() => {
+    ensureAudioContext().then((context) => {
+      if (!context) return
+      const duration = 1.2
+      const oscillator = context.createOscillator()
+      const gainNode = context.createGain()
+      oscillator.type = 'triangle'
+      oscillator.frequency.setValueAtTime(880, context.currentTime)
+      gainNode.gain.setValueAtTime(0.0001, context.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.25, context.currentTime + 0.05)
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration)
+      oscillator.connect(gainNode)
+      gainNode.connect(context.destination)
+      oscillator.start(context.currentTime)
+      oscillator.stop(context.currentTime + duration)
+    })
+  }, [ensureAudioContext])
 
   useEffect(() => {
     if (isRunning) {
@@ -19,6 +56,7 @@ const FocusTimer = ({ onSessionComplete }) => {
           if (prev <= 1) {
             clearInterval(intervalRef.current)
             setIsRunning(false)
+            triggerAlarm()
             onSessionComplete()
             return 0
           }
@@ -28,7 +66,7 @@ const FocusTimer = ({ onSessionComplete }) => {
     }
 
     return () => clearInterval(intervalRef.current)
-  }, [isRunning, onSessionComplete])
+  }, [isRunning, onSessionComplete, triggerAlarm])
 
   useEffect(() => {
     if (!isRunning) {
@@ -51,6 +89,7 @@ const FocusTimer = ({ onSessionComplete }) => {
     if (isRunning) {
       clearInterval(intervalRef.current)
     }
+    ensureAudioContext()
     setIsRunning((prev) => !prev)
   }
 

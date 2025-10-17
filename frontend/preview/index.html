@@ -128,8 +128,7 @@
       </header>
 
       <nav class="tab-bar" role="tablist" aria-label="Secciones principales">
-        <button type="button" class="tab-bar__button is-active" role="tab">Acceso</button>
-        <button type="button" class="tab-bar__button" role="tab">Tareas</button>
+        <button type="button" class="tab-bar__button is-active" role="tab">Tareas</button>
         <button type="button" class="tab-bar__button" role="tab">Pomodoro</button>
         <button type="button" class="tab-bar__button" role="tab">Calendario</button>
         <button type="button" class="tab-bar__button" role="tab">Recordatorios</button>
@@ -138,63 +137,6 @@
       </nav>
 
       <main class="tab-panels">
-        <div class="preview-tab">
-          <span class="preview-tab__label">Acceso</span>
-          <section class="tab-panel" aria-labelledby="tab-login">
-            <section class="panel panel--auth" aria-labelledby="login-heading" data-sticker="Acceso" data-icon="🔐">
-              <header class="panel__header">
-                <div class="panel__header-main">
-                  <h2 id="login-heading" class="panel__title">Ingresa a CogniCore</h2>
-                  <p class="panel__subtitle">
-                    Regístrate con Google u Outlook para que los recordatorios lleguen como avisos tipo Teams en tu correo.
-                  </p>
-                </div>
-                <button type="button" class="panel__mode-toggle">Modo oscuro</button>
-              </header>
-              <div class="auth-card" role="form">
-                <div class="auth-card__mode" role="radiogroup" aria-label="Elige cómo continuar">
-                  <button type="button" role="radio" aria-checked="true" class="auth-card__mode-button is-active">
-                    Ya tengo cuenta
-                  </button>
-                  <button type="button" role="radio" aria-checked="false" class="auth-card__mode-button">
-                    Soy nuevo/a
-                  </button>
-                </div>
-                <label class="auth-card__label" for="preview-auth-email">
-                  <span>Correo educativo</span>
-                  <input
-                    id="preview-auth-email"
-                    type="email"
-                    placeholder="tucuenta@university.edu"
-                    aria-describedby="preview-auth-helper"
-                  />
-                </label>
-                <p id="preview-auth-helper" class="auth-card__demo-hint">
-                  Si eliges "Soy nuevo/a" aparecerá el campo para tu nombre y enviaremos un correo de bienvenida.
-                </p>
-                <div class="auth-card__providers" role="group" aria-label="Proveedores de inicio de sesión">
-                  <button type="button" class="auth-card__provider auth-card__provider--google">
-                    Continuar con Google
-                    <span class="auth-card__helper">Recibirás avisos en Gmail como si fueran recordatorios de Teams.</span>
-                  </button>
-                  <button type="button" class="auth-card__provider auth-card__provider--microsoft">
-                    Continuar con Microsoft
-                    <span class="auth-card__helper">Sincroniza tus avisos con Outlook y Microsoft Teams.</span>
-                  </button>
-                </div>
-                <div class="auth-card__session" aria-live="polite">
-                  <p class="auth-card__session-title">Sesión activa</p>
-                  <p class="auth-card__session-text">Sofía Student · sofia.student@gmail.com</p>
-                  <span class="auth-card__session-pill">Notificaciones vía Gmail (estilo Teams)</span>
-                  <button type="button" class="auth-card__logout">Cerrar sesión</button>
-                </div>
-                <p class="auth-card__feedback">
-                  ¡Registro completado! Revisa tu correo de bienvenida y organiza tu semana con CogniCore.
-                </p>
-              </div>
-            </section>
-          </section>
-        </div>
         <div class="preview-tab">
           <span class="preview-tab__label">Tareas</span>
           <section class="tab-panel" aria-labelledby="tab-tasks">
@@ -521,6 +463,38 @@
                     </div>
                     <div class="list-item__actions">
                       <span class="pill pill--outline">Gmail · estilo Teams</span>
+                      <button type="button" class="list-item__action">Editar</button>
+                    </div>
+                    <div class="reminder-edit">
+                      <div class="reminder-edit__grid">
+                        <label class="reminder-edit__label">
+                          <span>Título</span>
+                          <input type="text" value="Entrega proyecto integrador" />
+                        </label>
+                        <label class="reminder-edit__label">
+                          <span>Tipo</span>
+                          <select>
+                            <option selected>Tarea</option>
+                            <option>Enfoque</option>
+                            <option>Personal</option>
+                          </select>
+                        </label>
+                        <label class="reminder-edit__label">
+                          <span>Fecha y hora</span>
+                          <input type="datetime-local" value="2025-05-13T08:00" />
+                        </label>
+                        <label class="reminder-edit__label reminder-edit__label--wide">
+                          <span>Notas</span>
+                          <textarea>Avisa 24 horas antes y adjunta checklist.</textarea>
+                        </label>
+                      </div>
+                      <div class="reminder-edit__actions">
+                        <span class="reminder-edit__error">Elige la nueva hora antes de guardar.</span>
+                        <div class="reminder-edit__buttons">
+                          <button type="button" class="ghost-button">Cancelar</button>
+                          <button type="button" class="primary">Guardar cambios</button>
+                        </div>
+                      </div>
                     </div>
                   </article>
                   <article class="list-item" role="listitem">
@@ -530,6 +504,7 @@
                     </div>
                     <div class="list-item__actions">
                       <span class="pill pill--outline">Outlook · Teams</span>
+                      <button type="button" class="list-item__action">Editar</button>
                     </div>
                   </article>
                   <article class="list-item" role="listitem">
@@ -539,6 +514,7 @@
                     </div>
                     <div class="list-item__actions">
                       <span class="pill pill--outline">Gmail · estilo Teams</span>
+                      <button type="button" class="list-item__action">Editar</button>
                     </div>
                   </article>
                 </div>

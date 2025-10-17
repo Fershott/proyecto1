@@ -1,6 +1,6 @@
 # CogniCore
 
-CogniCore es una plataforma web inclusiva para la organización académica universitaria con énfasis en estudiantes con TDAH u otras neurodivergencias. El proyecto combina una API en Python (FastAPI) y una interfaz React pensada para guiar paso a paso al usuario con un estilo estudiantil, colorido y accesible. La experiencia arranca en una pestaña de acceso donde el primer registro se realiza con Google o Microsoft, se envía un correo de confirmación y se activa automáticamente el tablero con la burbuja de perfil y el selector de modo oscuro.
+CogniCore es una plataforma web inclusiva para la organización académica universitaria con énfasis en estudiantes con TDAH u otras neurodivergencias. El proyecto combina una API en Python (FastAPI) y una interfaz React pensada para guiar paso a paso al usuario con un estilo estudiantil, colorido y accesible. La sesión se inicia desde un portal dedicado de Google o Microsoft (con vista previa en `frontend/preview/login.html`) y, tras autenticarse, el tablero muestra pestañas independientes para tareas, pomodoro, calendario, recordatorios, resúmenes e ideas rápidas con la burbuja de perfil y el selector de modo oscuro siempre visibles.
 
 ## Estructura del proyecto
 
@@ -120,11 +120,12 @@ uvicorn app.main:app --reload
 
 La API estará disponible en `http://localhost:8000`.
 
-### Configurar el envío de correos de bienvenida
+### Configurar el envío de correos de bienvenida y recordatorios
 
-Cuando un estudiante se registra por primera vez, CogniCore envía un correo de confirmación. De forma predeterminada el
-mensaje se guarda en `backend/app/data/outbox/` para que puedas revisarlo sin credenciales externas. Si quieres enviar el
-correo real desde Gmail u Outlook, define estas variables de entorno antes de arrancar FastAPI:
+Cuando un estudiante se registra por primera vez, CogniCore envía un correo de confirmación y cada recordatorio programado o
+actualizado genera un aviso adicional estilo Teams. De forma predeterminada los mensajes se guardan en
+`backend/app/data/outbox/` para que puedas revisarlos sin credenciales externas. Si quieres enviar los correos reales desde
+Gmail u Outlook, define estas variables de entorno antes de arrancar FastAPI:
 
 ```bash
 export COGNICORE_SMTP_HOST="smtp.gmail.com"
@@ -134,8 +135,31 @@ export COGNICORE_SMTP_PASSWORD="tu_contraseña_o_token"
 export COGNICORE_EMAIL_FROM="notificaciones@cognicore.app"  # Opcional
 ```
 
-Con esa configuración el endpoint `/register` enviará la bienvenida usando TLS. Si no defines `COGNICORE_SMTP_HOST`, el
-mensaje seguirá apareciendo en la carpeta `outbox` para desarrollo local.
+Con esa configuración los endpoints de registro y recordatorios enviarán los correos usando TLS. Si no defines
+`COGNICORE_SMTP_HOST`, los mensajes seguirán apareciendo en la carpeta `outbox` para desarrollo local.
+
+### Autenticación con Google y Microsoft
+
+- Los endpoints preferidos para nuevos registros son `/auth/google/register` y `/auth/microsoft/register`, que garantizan el
+  dominio correcto (Gmail u Outlook) antes de crear la cuenta.
+- Las sesiones existentes se recuperan con `/auth/google/login` y `/auth/microsoft/login`. El endpoint genérico `/login`
+  permanece disponible para clientes antiguos, pero la interfaz React ya selecciona automáticamente la ruta correcta.
+- Si llamas a `/register` directamente se mantiene compatibilidad retroactiva, aunque las llamadas repetidas devuelven ahora
+  una respuesta `200 OK` con la sesión existente en lugar de un error `409`.
+
+### Recordatorios editables con estilo Teams
+
+- Cada tarjeta de recordatorio puede editarse desde la interfaz y el backend expone `PATCH /reminders/{id}` para modificar
+  título, notas, hora o tipo. El proveedor (`delivery_provider`) siempre coincide con la sesión activa para mantener la
+  sincronización con Gmail o Outlook.
+- Cada creación o actualización genera un correo en el `outbox` (o en tu SMTP configurado) que replica la experiencia tipo
+  Teams solicitada.
+
+### Pomodoro con alarma accesible
+
+El componente `FocusTimer` ahora emite un sonido breve al finalizar cada ciclo y muestra un aviso visual. El audio se genera
+con la Web Audio API después de que la persona usuaria pulse “Iniciar”, asegurando compatibilidad con las restricciones de
+reproducción automática del navegador.
 
 ### Ejecutar una demo rápida sin dependencias externas
 

@@ -107,8 +107,9 @@ const FALLBACK_ORIGINAL_TEXT =
 
 const FALLBACK_KEYWORDS = ['concentración', 'bloques cortos', 'estrategias accesibles']
 
-const TABS = [
-  { id: 'login', label: 'Acceso' },
+const LOGIN_TAB = { id: 'login', label: 'Acceso' }
+
+const DASHBOARD_TABS = [
   { id: 'tasks', label: 'Tareas' },
   { id: 'timer', label: 'Pomodoro' },
   { id: 'calendar', label: 'Calendario' },
@@ -185,6 +186,11 @@ const App = () => {
     setOriginalText('')
     setKeywords([])
     setPresetSummaryText('')
+  }, [])
+
+  const resolveAuthEndpoints = useCallback((provider, action) => {
+    const providerSegment = provider === 'microsoft' ? 'microsoft' : 'google'
+    return [`${API_URL}/auth/${providerSegment}/${action}`, `${API_URL}/${action}`]
   }, [])
 
   // Mantiene sincronizado el modo oscuro con el DOM y el almacenamiento local.
@@ -383,6 +389,61 @@ const App = () => {
     [session, isOfflineMode, setReminders, setStats]
   )
 
+  // Ajusta un recordatorio existente preservando el proveedor activo.
+  const handleUpdateReminder = useCallback(
+    async (reminderId, { title, description, remindAt, type }) => {
+      if (!session) {
+        alert('Inicia sesión para editar tus recordatorios sincronizados.')
+        return null
+      }
+
+      if (isOfflineMode) {
+        const updatedReminder = {
+          id: reminderId,
+          title,
+          description,
+          remind_at: remindAt,
+          type,
+          delivery_provider: session.provider
+        }
+        setReminders((prev) =>
+          prev.map((reminder) => (reminder.id === reminderId ? updatedReminder : reminder))
+        )
+        return updatedReminder
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/reminders/${reminderId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            remind_at: remindAt,
+            type
+          })
+        })
+
+        const data = await response.json().catch(() => null)
+        if (!response.ok) {
+          throw new Error(data?.detail || 'No se pudo actualizar el recordatorio.')
+        }
+
+        setReminders((prev) =>
+          prev.map((reminder) => (reminder.id === reminderId ? data : reminder))
+        )
+        return data
+      } catch (error) {
+        console.error('Error actualizando recordatorio', error)
+        alert(error.message || 'No se pudo guardar el cambio del recordatorio.')
+        return null
+      }
+    },
+    [session, isOfflineMode]
+  )
+
   // Activa la lectura en voz alta del resumen o texto original.
   const speakText = useCallback((text) => {
     if (!text) return
@@ -414,27 +475,41 @@ const App = () => {
 
       try {
         const displayName = email.split('@')[0].replace(/\./g, ' ')
-        const response = await fetch(`${API_URL}/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email,
-            provider,
-            display_name: displayName.trim().replace(/\s+/g, ' ')
-          })
-        })
-
-        const data = await response.json()
-        if (!response.ok) {
-          return { success: false, error: data?.detail || 'No se pudo iniciar sesión.' }
+        const payload = {
+          email,
+          provider,
+          display_name: displayName.trim().replace(/\s+/g, ' ')
         }
 
-        setIsOfflineMode(false)
-        setSession(data)
-        setActiveTab('tasks')
-        return { success: true }
+        const endpoints = resolveAuthEndpoints(provider, 'login')
+        for (const endpoint of endpoints) {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          })
+
+          if (response.status === 404) {
+            continue
+          }
+
+          const data = await response.json().catch(() => null)
+          if (!response.ok) {
+            return { success: false, error: data?.detail || 'No se pudo iniciar sesión.' }
+          }
+
+          setIsOfflineMode(false)
+          setSession(data)
+          setActiveTab('tasks')
+          return { success: true }
+        }
+
+        return {
+          success: false,
+          error: 'El servicio de autenticación no está disponible en este momento.'
+        }
       } catch (error) {
         console.error('Error al iniciar sesión', error)
         setIsBackendReachable(false)
@@ -445,7 +520,7 @@ const App = () => {
         }
       }
     },
-    [activateOfflineExperience, fallbackData.session, isBackendReachable]
+    [activateOfflineExperience, fallbackData.session, isBackendReachable, resolveAuthEndpoints]
   )
 
   // Registra a la primera persona del equipo y envía confirmaciones.
@@ -466,27 +541,41 @@ const App = () => {
       }
 
       try {
-        const response = await fetch(`${API_URL}/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email,
-            provider,
-            display_name: normalizedDisplay
-          })
-        })
-
-        const data = await response.json()
-        if (!response.ok) {
-          return { success: false, error: data?.detail || 'No se pudo registrar la cuenta.' }
+        const payload = {
+          email,
+          provider,
+          display_name: normalizedDisplay
         }
 
-        setIsOfflineMode(false)
-        setSession(data)
-        setActiveTab('tasks')
-        return { success: true, session: data }
+        const endpoints = resolveAuthEndpoints(provider, 'register')
+        for (const endpoint of endpoints) {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          })
+
+          if (response.status === 404) {
+            continue
+          }
+
+          const data = await response.json().catch(() => null)
+          if (!response.ok) {
+            return { success: false, error: data?.detail || 'No se pudo registrar la cuenta.' }
+          }
+
+          setIsOfflineMode(false)
+          setSession(data)
+          setActiveTab('tasks')
+          return { success: true, session: data }
+        }
+
+        return {
+          success: false,
+          error: 'No se pudo contactar al servicio de registro. Intenta más tarde.'
+        }
       } catch (error) {
         console.error('Error al registrar la cuenta', error)
         setIsBackendReachable(false)
@@ -501,7 +590,7 @@ const App = () => {
         }
       }
     },
-    [activateOfflineExperience, isBackendReachable]
+    [activateOfflineExperience, isBackendReachable, resolveAuthEndpoints]
   )
 
   // Cierra la sesión y limpia el estado compartido.
@@ -627,6 +716,8 @@ const App = () => {
     [isOfflineMode]
   )
 
+  const tabs = session ? DASHBOARD_TABS : [LOGIN_TAB]
+
   return (
     <div className="app-shell">
       <HeaderGreeting
@@ -637,7 +728,7 @@ const App = () => {
         onToggleDarkMode={handleToggleDarkMode}
       />
       <nav className="tab-bar" role="tablist" aria-label="Secciones principales">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const isDisabled = !session && tab.id !== 'login'
           return (
             <button
@@ -720,7 +811,12 @@ const App = () => {
           hidden={activeTab !== 'reminders'}
           className="tab-panel"
         >
-          <ReminderList reminders={reminders} onAdd={handleAddReminder} session={session} />
+          <ReminderList
+            reminders={reminders}
+            onAdd={handleAddReminder}
+            onUpdate={handleUpdateReminder}
+            session={session}
+          />
         </section>
         <section
           id="panel-summary"
