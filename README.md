@@ -140,12 +140,27 @@ Con esa configuración los endpoints de registro y recordatorios enviarán los c
 
 ### Autenticación con Google y Microsoft
 
-- Los endpoints preferidos para nuevos registros son `/auth/google/register` y `/auth/microsoft/register`, que garantizan el
-  dominio correcto (Gmail u Outlook) antes de crear la cuenta.
-- Las sesiones existentes se recuperan con `/auth/google/login` y `/auth/microsoft/login`. El endpoint genérico `/login`
-  permanece disponible para clientes antiguos, pero la interfaz React ya selecciona automáticamente la ruta correcta.
-- Si llamas a `/register` directamente se mantiene compatibilidad retroactiva, aunque las llamadas repetidas devuelven ahora
-  una respuesta `200 OK` con la sesión existente en lugar de un error `409`.
+CogniCore utiliza los portales oficiales de Google y Microsoft mediante OAuth 2.0. Para habilitar el flujo completo define las
+siguientes variables de entorno antes de iniciar la API:
+
+```bash
+export COGNICORE_FRONTEND_URL="http://localhost:5173"  # URL a la que se redirige tras iniciar sesión
+export COGNICORE_GOOGLE_CLIENT_ID="tu_client_id_de_google"
+export COGNICORE_GOOGLE_CLIENT_SECRET="tu_client_secret_de_google"
+export COGNICORE_GOOGLE_REDIRECT_URI="http://localhost:8000/auth/google/callback"
+export COGNICORE_MICROSOFT_CLIENT_ID="tu_client_id_de_microsoft"
+export COGNICORE_MICROSOFT_CLIENT_SECRET="tu_client_secret_de_microsoft"
+export COGNICORE_MICROSOFT_REDIRECT_URI="http://localhost:8000/auth/microsoft/callback"
+```
+
+Con la configuración anterior, los botones de la pestaña “Acceso” redirigen a los endpoints `/auth/<proveedor>/start`, que
+envían al usuario al consentimiento oficial. Tras autenticarse, los proveedores regresan a `/auth/<proveedor>/callback`, donde
+CogniCore valida el dominio del correo, crea o recupera la sesión, envía el correo de bienvenida y redirige al frontend con el
+estado `auth=registered` o `auth=signed-in`. El modo de pruebas puede activarse estableciendo `COGNICORE_OAUTH_MODE=stub` para
+evitar llamadas externas (se usa en la suite de tests).
+
+Los endpoints REST tradicionales (`/auth/<proveedor>/register`, `/auth/<proveedor>/login` y `/register`) se mantienen para
+compatibilidad con clientes anteriores y con integraciones no basadas en el navegador.
 
 ### Recordatorios editables con avisos por correo
 

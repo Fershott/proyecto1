@@ -14,9 +14,11 @@ objetivo de cada pieza de lógica sin necesidad de explorar otros archivos.
 import logging
 from datetime import datetime, timezone
 from typing import Optional
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from . import summarizer
 from .mailer import send_registration_email, send_reminder_email
@@ -53,6 +55,12 @@ from .storage import (
     save_tasks,
     save_users,
 )
+from .oauth import (
+    OAuthStateStore,
+    get_oauth_client,
+    is_stub_mode,
+    resolve_frontend_base_url,
+)
 
 app = FastAPI(title="Cognicore API", version="1.0.0")
 
@@ -79,6 +87,8 @@ ALLOWED_DOMAINS: dict[AuthProvider, tuple[str, ...]] = {
     ),
 }
 
+oauth_state_store = OAuthStateStore()
+
 
 def _ensure_utc(dt: datetime) -> datetime:
     """Normaliza una marca de tiempo a UTC con información de zona horaria."""
@@ -100,6 +110,41 @@ def _model_copy(instance, **kwargs):
     }
     payload.update(update)
     return type(instance)(**payload)
+
+
+def _resolve_redirect_target(next_url: Optional[str]) -> str:
+    """Valida y construye la URL de retorno tras completar OAuth."""
+
+    base = resolve_frontend_base_url()
+    if not next_url:
+        return base
+
+    parsed_target = urlparse(next_url)
+    parsed_base = urlparse(base)
+
+    if parsed_target.scheme and parsed_target.netloc:
+        if (
+            parsed_target.netloc != parsed_base.netloc
+            or parsed_target.scheme != parsed_base.scheme
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="La URL de retorno no coincide con el dominio configurado para el frontend.",
+            )
+        return next_url
+
+    combined = urljoin(base + "/", next_url.lstrip("/"))
+    return combined
+
+
+def _append_query_params(url: str, params: dict[str, str]) -> str:
+    """Agrega parámetros de consulta preservando los existentes."""
+
+    parsed = urlparse(url)
+    current = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    current.update(params)
+    new_query = urlencode(current)
+    return urlunparse(parsed._replace(query=new_query))
 
 
 def _get_active_session() -> Session | None:
@@ -293,6 +338,116 @@ def _enforce_provider(payload: SessionCreate, provider: AuthProvider) -> Session
     return SessionCreate(email=payload.email, provider=provider, display_name=payload.display_name)
 
 
+def _issue_oauth_state(
+    provider: AuthProvider,
+    mode: str,
+    display_name: Optional[str],
+    next_url: Optional[str],
+    stub_email: Optional[str],
+) -> str:
+    """Genera y guarda el estado necesario para completar el flujo OAuth."""
+
+    normalized_mode = "register" if mode == "register" else "login"
+    payload = {
+        "mode": normalized_mode,
+        "provider": provider.value,
+        "next": _resolve_redirect_target(next_url),
+    }
+
+    if display_name and display_name.strip():
+        payload["display_name"] = " ".join(display_name.strip().split())
+
+    if stub_email and stub_email.strip():
+        payload["stub_email"] = _normalize_email(stub_email)
+
+    return oauth_state_store.issue(payload)
+
+
+@app.get("/auth/google/start")
+def start_google_oauth(
+    mode: str = "login",
+    display_name: Optional[str] = None,
+    next: Optional[str] = None,
+    stub_email: Optional[str] = None,
+) -> RedirectResponse:
+    """Inicia el flujo OAuth de Google redirigiendo al consentimiento oficial."""
+
+    if mode == "register" and not (display_name and display_name.strip()) and not is_stub_mode():
+        raise HTTPException(
+            status_code=400,
+            detail="Indica el nombre para mostrar antes de registrarte con Google.",
+        )
+
+    state = _issue_oauth_state(AuthProvider.GOOGLE, mode, display_name, next, stub_email)
+    client = get_oauth_client(AuthProvider.GOOGLE)
+
+    if is_stub_mode():
+        fake_callback = _append_query_params(
+            client.config.redirect_uri,
+            {"code": "stub-code", "state": state},
+        )
+        return RedirectResponse(fake_callback, status_code=307)
+
+    prompt = "consent" if mode == "register" else None
+    authorize_url = client.build_authorize_url(state, prompt=prompt)
+    return RedirectResponse(authorize_url, status_code=307)
+
+
+@app.get("/auth/microsoft/start")
+def start_microsoft_oauth(
+    mode: str = "login",
+    display_name: Optional[str] = None,
+    next: Optional[str] = None,
+    stub_email: Optional[str] = None,
+) -> RedirectResponse:
+    """Inicia el flujo OAuth con Microsoft Azure (Outlook/Teams)."""
+
+    if mode == "register" and not (display_name and display_name.strip()) and not is_stub_mode():
+        raise HTTPException(
+            status_code=400,
+            detail="Indica el nombre para mostrar antes de registrarte con Microsoft.",
+        )
+
+    state = _issue_oauth_state(AuthProvider.MICROSOFT, mode, display_name, next, stub_email)
+    client = get_oauth_client(AuthProvider.MICROSOFT)
+
+    if is_stub_mode():
+        fake_callback = _append_query_params(
+            client.config.redirect_uri,
+            {"code": "stub-code", "state": state},
+        )
+        return RedirectResponse(fake_callback, status_code=307)
+
+    authorize_url = client.build_authorize_url(state)
+    return RedirectResponse(authorize_url, status_code=307)
+
+
+@app.get("/auth/google/callback")
+async def google_callback(
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None,
+) -> RedirectResponse:
+    """Recibe la respuesta de Google y completa el flujo de autenticación."""
+
+    if not state:
+        raise HTTPException(status_code=400, detail="Falta el estado de autenticación de Google.")
+    return await _complete_oauth_callback(AuthProvider.GOOGLE, code, state, error)
+
+
+@app.get("/auth/microsoft/callback")
+async def microsoft_callback(
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None,
+) -> RedirectResponse:
+    """Recibe la respuesta de Microsoft y completa el flujo de autenticación."""
+
+    if not state:
+        raise HTTPException(status_code=400, detail="Falta el estado de autenticación de Microsoft.")
+    return await _complete_oauth_callback(AuthProvider.MICROSOFT, code, state, error)
+
+
 @app.post("/register", response_model=Session, status_code=201)
 def register_user(payload: SessionCreate, response: Response) -> Session:
     """Endpoint genérico compatible con clientes antiguos."""
@@ -314,6 +469,83 @@ def register_microsoft(payload: SessionCreate, response: Response) -> Session:
 
     enforced = _enforce_provider(payload, AuthProvider.MICROSOFT)
     return _register_payload(enforced, response)
+
+
+def _extract_email(profile: dict, provider: AuthProvider) -> str | None:
+    """Obtiene el correo electrónico del perfil según el proveedor."""
+
+    if provider is AuthProvider.GOOGLE:
+        return profile.get("email")
+    return (
+        profile.get("mail")
+        or profile.get("userPrincipalName")
+        or profile.get("preferred_username")
+        or profile.get("email")
+    )
+
+
+async def _complete_oauth_callback(
+    provider: AuthProvider,
+    code: Optional[str],
+    state: str,
+    error: Optional[str],
+) -> RedirectResponse:
+    """Procesa la respuesta del proveedor OAuth y redirige al frontend."""
+
+    state_payload = oauth_state_store.consume(state)
+    redirect_target = _resolve_redirect_target(state_payload.get("next"))
+
+    if error:
+        params = {
+            "auth": "error",
+            "provider": provider.value,
+            "message": error,
+        }
+        return RedirectResponse(_append_query_params(redirect_target, params), status_code=303)
+
+    if not code:
+        raise HTTPException(status_code=400, detail="El proveedor no entregó un código de autorización válido.")
+
+    client = get_oauth_client(provider)
+    tokens = await client.exchange_code(code)
+    profile = await client.fetch_profile(tokens, state_payload)
+
+    email = _extract_email(profile, provider)
+    if not email:
+        raise HTTPException(status_code=400, detail="No se pudo obtener el correo electrónico del perfil autenticado.")
+
+    raw_display = state_payload.get("display_name") or (
+        profile.get("name")
+        or profile.get("displayName")
+        or profile.get("given_name")
+        or profile.get("preferred_username")
+        or ""
+    )
+    display_name = _normalize_display_name(str(raw_display or ""), email)
+
+    payload = SessionCreate(email=email, provider=provider, display_name=display_name)
+    mode = state_payload.get("mode")
+
+    if mode == "register":
+        response = Response()
+        if provider is AuthProvider.GOOGLE:
+            register_google(payload, response)
+        else:
+            register_microsoft(payload, response)
+        status_label = "registered" if response.status_code == 201 else "signed-in"
+    else:
+        if provider is AuthProvider.GOOGLE:
+            login_google(payload)
+        else:
+            login_microsoft(payload)
+        status_label = "signed-in"
+
+    params = {
+        "auth": status_label,
+        "provider": provider.value,
+    }
+    final_url = _append_query_params(redirect_target, params)
+    return RedirectResponse(final_url, status_code=303)
 
 
 @app.delete("/session", status_code=204)

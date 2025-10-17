@@ -28,6 +28,7 @@ SCHEDULE_FILE = DATA_DIR / "schedule.json"
 STATS_FILE = DATA_DIR / "stats.json"
 SESSIONS_FILE = DATA_DIR / "sessions.json"
 USERS_FILE = DATA_DIR / "users.json"
+OAUTH_STATES_FILE = DATA_DIR / "oauth_states.json"
 
 
 def _read_json(path: Path, default):
@@ -42,6 +43,21 @@ def _write_json(path: Path, data):
     """Escribe datos en JSON con codificación UTF-8 y formato legible."""
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def load_oauth_states() -> dict[str, dict]:
+    """Recupera los estados activos de OAuth almacenados temporalmente."""
+
+    raw = _read_json(OAUTH_STATES_FILE, {})
+    if not isinstance(raw, dict):
+        return {}
+    return raw
+
+
+def save_oauth_states(states: dict[str, dict]) -> None:
+    """Persiste el diccionario de estados OAuth emitidos."""
+
+    _write_json(OAUTH_STATES_FILE, states)
 
 
 def _ensure_attributes(model, payload: dict, fields: Iterable[str]):

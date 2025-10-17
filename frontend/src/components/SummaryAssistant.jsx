@@ -16,7 +16,7 @@ const SummaryAssistant = ({
   onPresetConsumed
 }) => {
   const [text, setText] = useState('')
-  const [sentences, setSentences] = useState(5)
+  const [sentences, setSentences] = useState(6)
   const [selectedFile, setSelectedFile] = useState(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [activeResultTab, setActiveResultTab] = useState('summary')
@@ -114,7 +114,7 @@ const SummaryAssistant = ({
             id="summary-sentences"
             type="range"
             min="1"
-            max="8"
+            max="10"
             value={sentences}
             onChange={(event) => setSentences(Number(event.target.value))}
           />

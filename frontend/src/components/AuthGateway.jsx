@@ -1,118 +1,113 @@
 /**
- * Módulo de autenticación que guía el inicio de sesión y registro.
- * Permite conectarse con Google o Microsoft para habilitar notificaciones.
+ * Entrada principal al ecosistema CogniCore.
+ * Presenta un login minimalista con opciones para Google y Microsoft.
  */
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 const providerCopy = {
   google: {
-    label: 'Continuar con Google',
-    helper: 'Recibirás avisos en tu bandeja de Gmail.'
+    loginLabel: 'Iniciar con Google',
+    registerLabel: 'Crear cuenta con Google',
+    helper: 'Recibirás recordatorios académicos en tu bandeja de Gmail.',
+    fallbackName: 'Estudiante Google'
   },
   microsoft: {
-    label: 'Continuar con Microsoft',
-    helper: 'Sincroniza tus avisos con Outlook.'
+    loginLabel: 'Iniciar con Microsoft',
+    registerLabel: 'Crear cuenta con Microsoft',
+    helper: 'Sincronizaremos avisos con Outlook y Microsoft 365.',
+    fallbackName: 'Estudiante Microsoft'
   }
 }
 
-// Componente que muestra el formulario de acceso a CogniCore.
+// Interfaz del login basado en OAuth con soporte para modo offline.
 const AuthGateway = ({
-  session,
-  onLogin,
-  onRegister,
-  onLogout,
   isLoading,
-  isOfflineMode,
   isBackendReachable,
   isDarkMode,
-  onToggleDarkMode
+  onToggleDarkMode,
+  apiBaseUrl,
+  onOfflineAuth
 }) => {
-  const [email, setEmail] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [feedback, setFeedback] = useState('')
-  const [submittingProvider, setSubmittingProvider] = useState('')
   const [mode, setMode] = useState('login')
+  const [displayName, setDisplayName] = useState('')
+  const [offlineEmail, setOfflineEmail] = useState('')
+  const [feedback, setFeedback] = useState('')
+  const [pendingProvider, setPendingProvider] = useState('')
 
-  // Gestiona tanto el inicio de sesión como el registro según el modo seleccionado.
-  const handleAction = async (provider) => {
-    const normalizedEmail = email.trim()
-    if (!normalizedEmail) {
-      setFeedback('Escribe el correo asociado a tu cuenta educativa de Google u Outlook.')
-      return
+  const helperMessage = useMemo(() => {
+    if (mode === 'register') {
+      return 'Te enviaremos un correo de bienvenida para confirmar la cuenta educativa que utilizarás con CogniCore.'
     }
+    return 'Inicia sesión con tu cuenta institucional para recibir notificaciones de recordatorios por correo.'
+  }, [mode])
 
-    const handler = mode === 'register' ? onRegister : onLogin
-    if (!handler) return
-
-    if (mode === 'register' && !displayName.trim()) {
-      setFeedback('Indica cómo quieres que te saludemos en el tablero estudiantil.')
-      return
+  const buildRedirectTarget = (provider) => {
+    const params = new URLSearchParams({
+      mode,
+      next: window.location.origin + window.location.pathname
+    })
+    if (mode === 'register') {
+      params.set('display_name', displayName.trim())
     }
-
-    const payload =
-      mode === 'register'
-        ? { email: normalizedEmail, provider, displayName }
-        : { email: normalizedEmail, provider }
-
-    try {
-      setSubmittingProvider(provider)
-      setFeedback('')
-      const result = await handler(payload)
-      if (!result?.success) {
-        setFeedback(result?.error || 'No pudimos conectar tu cuenta. Inténtalo de nuevo.')
-        return
-      }
-      setFeedback(
-        mode === 'register'
-          ? '¡Registro completado! Revisa tu correo para la confirmación y organiza tu semana con CogniCore.'
-          : '¡Listo! Ya puedes organizar tu semana con CogniCore.'
-      )
-      setEmail('')
-      setDisplayName('')
-      setMode('login')
-    } finally {
-      setSubmittingProvider('')
-    }
+    return `${apiBaseUrl}/auth/${provider}/start?${params.toString()}`
   }
 
-  // Permite cerrar la sesión desde la pestaña principal.
-  const handleLogout = async () => {
-    if (!onLogout) return
-    await onLogout()
-    setFeedback('Sesión cerrada. Vuelve a iniciar cuando quieras continuar organizando tu agenda.')
+  const handleOfflineAuth = (provider) => {
+    const normalizedEmail = offlineEmail.trim() || `${provider}@cognicore.demo`
+    const normalizedDisplay = displayName.trim() || providerCopy[provider].fallbackName
+    onOfflineAuth?.({
+      email: normalizedEmail,
+      provider,
+      displayName: normalizedDisplay
+    })
+    setFeedback(
+      'Modo sin conexión activado. Tus recordatorios y resúmenes se guardarán localmente hasta reconectar el backend.'
+    )
+  }
+
+  const handleProviderClick = (provider) => {
+    setFeedback('')
+
+    if (!isBackendReachable) {
+      handleOfflineAuth(provider)
+      return
+    }
+
+    if (mode === 'register' && !displayName.trim()) {
+      setFeedback('Indica el nombre con el que quieres ser recibido en el tablero de CogniCore.')
+      return
+    }
+
+    setPendingProvider(provider)
+    const target = buildRedirectTarget(provider)
+    window.location.href = target
   }
 
   return (
-    <section
-      className="panel panel--auth"
-      aria-labelledby="login-heading"
-      data-sticker="Acceso"
-      data-icon="🔐"
-    >
+    <section className="panel panel--auth" aria-labelledby="login-heading">
       <header className="panel__header">
         <div className="panel__header-main">
+          <p className="overview__eyebrow">Acceso</p>
           <h2 id="login-heading" className="panel__title">
-            Ingresa a CogniCore
+            Bienvenido a CogniCore
           </h2>
-          <p className="panel__subtitle">
-            Usa tu cuenta de Google o Microsoft para que los recordatorios lleguen directamente a tu correo.
-          </p>
+          <p className="panel__subtitle">Organiza tus tareas, recordatorios y resúmenes apoyándote en Google o Microsoft.</p>
         </div>
         <button type="button" className="panel__mode-toggle" onClick={() => onToggleDarkMode?.()}>
           {isDarkMode ? 'Modo claro' : 'Modo oscuro'}
         </button>
       </header>
-      <div className="auth-card" role="form">
+      <div className="auth-card" role="form" aria-describedby="auth-helper">
         {!isBackendReachable && (
           <p className="auth-card__demo-hint" role="status">
-            Modo demostración sin conexión: tus cambios se guardarán localmente hasta que el backend vuelva a conectarse.
+            El backend no está disponible. Puedes activar el modo demostración iniciando sesión con un correo de prueba.
           </p>
         )}
-        <div className="auth-card__mode" role="radiogroup" aria-label="Elige cómo continuar">
-          {[
-            { id: 'login', label: 'Ya tengo cuenta' },
-            { id: 'register', label: 'Soy nuevo/a' }
-          ].map((option) => (
+        <p id="auth-helper" className="auth-card__helper-block">
+          {helperMessage}
+        </p>
+        <div className="auth-card__mode" role="radiogroup" aria-label="Selecciona entre registro o inicio de sesión">
+          {[{ id: 'login', label: 'Ya tengo cuenta' }, { id: 'register', label: 'Quiero registrarme' }].map((option) => (
             <button
               key={option.id}
               type="button"
@@ -120,72 +115,58 @@ const AuthGateway = ({
               aria-checked={mode === option.id}
               className={`auth-card__mode-button ${mode === option.id ? 'is-active' : ''}`}
               onClick={() => setMode(option.id)}
+              disabled={isLoading}
             >
               {option.label}
             </button>
           ))}
         </div>
-        <label className="auth-card__label" htmlFor="auth-email">
-          <span>Correo educativo</span>
-          <input
-            id="auth-email"
-            type="email"
-            placeholder="tucuenta@university.edu"
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            disabled={isLoading || (Boolean(session) && !isOfflineMode)}
-          />
-        </label>
         {mode === 'register' && (
-          <label className="auth-card__label" htmlFor="auth-display-name">
+          <label className="auth-card__label" htmlFor="display-name">
             <span>Nombre para mostrar</span>
             <input
-              id="auth-display-name"
+              id="display-name"
               type="text"
-              placeholder="Nombre para mostrar"
+              placeholder="Cómo quieres que te salude CogniCore"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              disabled={isLoading || (Boolean(session) && !isOfflineMode)}
+              disabled={isLoading}
             />
           </label>
         )}
-        <div className="auth-card__providers" role="group" aria-label="Proveedores de inicio de sesión">
-          {(['google', 'microsoft']).map((provider) => (
-            <button
-              key={provider}
-              type="button"
-              className={`auth-card__provider auth-card__provider--${provider}`}
-              onClick={() => handleAction(provider)}
-              disabled={
-                isLoading ||
-                Boolean(session && !isOfflineMode && isBackendReachable) ||
-                submittingProvider === provider
-              }
-            >
-              {submittingProvider === provider
-                ? mode === 'register'
-                  ? 'Registrando...'
-                  : 'Conectando...'
-                : providerCopy[provider].label}
-              <span className="auth-card__helper">{providerCopy[provider].helper}</span>
-            </button>
-          ))}
-        </div>
-        {session && (
-          <div className="auth-card__session" aria-live="polite">
-            <p className="auth-card__session-title">Sesión activa</p>
-            <p className="auth-card__session-text">
-              {session.display_name} · {session.email}
-            </p>
-            <span className="auth-card__session-pill">
-              Notificaciones vía {session.provider === 'google' ? 'Gmail' : 'Outlook'}
-            </span>
-            <button type="button" className="auth-card__logout" onClick={handleLogout}>
-              Cerrar sesión
-            </button>
-          </div>
+        {!isBackendReachable && (
+          <label className="auth-card__label" htmlFor="offline-email">
+            <span>Correo para modo demostración</span>
+            <input
+              id="offline-email"
+              type="email"
+              placeholder="tucuenta@universidad.edu"
+              value={offlineEmail}
+              onChange={(event) => setOfflineEmail(event.target.value)}
+              disabled={isLoading}
+            />
+          </label>
         )}
+        <div className="auth-card__providers" role="group" aria-label="Proveedores disponibles">
+          {(['google', 'microsoft']).map((provider) => {
+            const copy = providerCopy[provider]
+            const label = mode === 'register' ? copy.registerLabel : copy.loginLabel
+            const isPending = pendingProvider === provider
+
+            return (
+              <button
+                key={provider}
+                type="button"
+                className={`auth-card__provider auth-card__provider--${provider}`}
+                onClick={() => handleProviderClick(provider)}
+                disabled={isLoading || isPending}
+              >
+                {isPending ? 'Redirigiendo…' : label}
+                <span className="auth-card__helper">{copy.helper}</span>
+              </button>
+            )
+          })}
+        </div>
         {feedback && (
           <p className="auth-card__feedback" role="status">
             {feedback}

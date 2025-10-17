@@ -490,13 +490,18 @@ body.theme-dark .panel--auth {
 }
 
 body.theme-dark .auth-card {
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.6);
+  background: rgba(17, 25, 40, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  box-shadow: 0 24px 46px rgba(15, 23, 42, 0.7);
+}
+
+body.theme-dark .auth-card__helper-block {
+  color: rgba(224, 231, 255, 0.82);
 }
 
 body.theme-dark .auth-card__provider {
-  background: rgba(124, 58, 237, 0.18);
-  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.2);
+  border-color: rgba(124, 58, 237, 0.45);
   color: #f8fafc;
 }
 
@@ -631,6 +636,13 @@ body.theme-dark .reminder-edit {
   gap: 20px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   box-shadow: 0 18px 32px rgba(148, 163, 184, 0.18);
+}
+
+.auth-card__helper-block {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-muted);
 }
 
 .auth-card__label {
@@ -787,6 +799,12 @@ body.theme-dark .reminder-edit {
   border: 1px solid rgba(148, 163, 184, 0.32);
   font-size: 14px;
   color: var(--text-muted);
+}
+
+body.theme-dark .auth-card__demo-hint {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: rgba(224, 231, 255, 0.88);
 }
 
 .panel--support {

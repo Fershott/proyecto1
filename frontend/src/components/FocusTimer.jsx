@@ -34,18 +34,25 @@ const FocusTimer = ({ onSessionComplete }) => {
   const triggerAlarm = useCallback(() => {
     ensureAudioContext().then((context) => {
       if (!context) return
-      const duration = 1.2
-      const oscillator = context.createOscillator()
-      const gainNode = context.createGain()
-      oscillator.type = 'triangle'
-      oscillator.frequency.setValueAtTime(880, context.currentTime)
-      gainNode.gain.setValueAtTime(0.0001, context.currentTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.25, context.currentTime + 0.05)
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration)
-      oscillator.connect(gainNode)
-      gainNode.connect(context.destination)
-      oscillator.start(context.currentTime)
-      oscillator.stop(context.currentTime + duration)
+      const notes = [
+        { frequency: 880, duration: 0.7 },
+        { frequency: 660, duration: 0.7 }
+      ]
+      let start = context.currentTime
+      notes.forEach(({ frequency, duration }) => {
+        const oscillator = context.createOscillator()
+        const gainNode = context.createGain()
+        oscillator.type = 'sine'
+        oscillator.frequency.setValueAtTime(frequency, start)
+        gainNode.gain.setValueAtTime(0.0001, start)
+        gainNode.gain.exponentialRampToValueAtTime(0.35, start + 0.05)
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, start + duration)
+        oscillator.connect(gainNode)
+        gainNode.connect(context.destination)
+        oscillator.start(start)
+        oscillator.stop(start + duration)
+        start += duration + 0.05
+      })
     })
   }, [ensureAudioContext])
 

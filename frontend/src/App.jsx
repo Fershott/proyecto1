@@ -125,11 +125,6 @@ const App = () => {
     setPresetSummaryText('')
   }, [])
 
-  const resolveAuthEndpoints = useCallback((provider, action) => {
-    const providerSegment = provider === 'microsoft' ? 'microsoft' : 'google'
-    return [`${API_URL}/auth/${providerSegment}/${action}`, `${API_URL}/${action}`]
-  }, [])
-
   // Mantiene sincronizado el modo oscuro con el DOM y el almacenamiento local.
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -402,134 +397,6 @@ const App = () => {
     }
   }, [])
 
-  // Gestiona el inicio de sesión con Google o Microsoft.
-  const handleLogin = useCallback(
-    async ({ email, provider }) => {
-      if (!isBackendReachable) {
-        activateOfflineExperience({ email, provider })
-        return { success: true }
-      }
-
-      try {
-        const displayName = email.split('@')[0].replace(/\./g, ' ')
-        const payload = {
-          email,
-          provider,
-          display_name: displayName.trim().replace(/\s+/g, ' ')
-        }
-
-        const endpoints = resolveAuthEndpoints(provider, 'login')
-        for (const endpoint of endpoints) {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          })
-
-          if (response.status === 404) {
-            continue
-          }
-
-          const data = await response.json().catch(() => null)
-          if (!response.ok) {
-            return { success: false, error: data?.detail || 'No se pudo iniciar sesión.' }
-          }
-
-          setIsOfflineMode(false)
-          setSession(data)
-          setActiveTab('tasks')
-          return { success: true }
-        }
-
-        return {
-          success: false,
-          error: 'El servicio de autenticación no está disponible en este momento.'
-        }
-      } catch (error) {
-        console.error('Error al iniciar sesión', error)
-        setIsBackendReachable(false)
-        activateOfflineExperience({ email, provider })
-        return {
-          success: true,
-          session: { ...fallbackData.session, email, provider }
-        }
-      }
-    },
-    [activateOfflineExperience, fallbackData.session, isBackendReachable, resolveAuthEndpoints]
-  )
-
-  // Registra a la primera persona del equipo y envía confirmaciones.
-  const handleRegister = useCallback(
-    async ({ email, provider, displayName }) => {
-      const normalizedDisplay = displayName.trim()
-      if (!normalizedDisplay) {
-        return { success: false, error: 'Ingresa el nombre que quieres mostrar en el tablero.' }
-      }
-
-      if (!isBackendReachable) {
-        const localSession = activateOfflineExperience({
-          email,
-          provider,
-          display_name: normalizedDisplay
-        })
-        return { success: true, session: localSession }
-      }
-
-      try {
-        const payload = {
-          email,
-          provider,
-          display_name: normalizedDisplay
-        }
-
-        const endpoints = resolveAuthEndpoints(provider, 'register')
-        for (const endpoint of endpoints) {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          })
-
-          if (response.status === 404) {
-            continue
-          }
-
-          const data = await response.json().catch(() => null)
-          if (!response.ok) {
-            return { success: false, error: data?.detail || 'No se pudo registrar la cuenta.' }
-          }
-
-          setIsOfflineMode(false)
-          setSession(data)
-          setActiveTab('tasks')
-          return { success: true, session: data }
-        }
-
-        return {
-          success: false,
-          error: 'No se pudo contactar al servicio de registro. Intenta más tarde.'
-        }
-      } catch (error) {
-        console.error('Error al registrar la cuenta', error)
-        setIsBackendReachable(false)
-        const offlineSession = activateOfflineExperience({
-          email,
-          provider,
-          display_name: normalizedDisplay
-        })
-        return {
-          success: true,
-          session: offlineSession
-        }
-      }
-    },
-    [activateOfflineExperience, isBackendReachable, resolveAuthEndpoints]
-  )
-
   // Cierra la sesión y limpia el estado compartido.
   const handleLogout = useCallback(async () => {
     if (!isBackendReachable || isOfflineMode) {
@@ -573,6 +440,18 @@ const App = () => {
   const handlePresetConsumed = useCallback(() => {
     setPresetSummaryText('')
   }, [])
+
+  // Permite autenticar en modo demostración cuando el backend está desconectado.
+  const handleOfflineAuth = useCallback(
+    ({ email, provider, displayName }) => {
+      activateOfflineExperience({
+        email: email || FALLBACK_SESSION.email,
+        provider: provider || FALLBACK_SESSION.provider,
+        display_name: displayName || FALLBACK_SESSION.display_name
+      })
+    },
+    [activateOfflineExperience]
+  )
 
   // Crea un bloque del calendario semanal y lo muestra en la pestaña correspondiente.
   const handleAddScheduleEntry = useCallback(
@@ -698,15 +577,12 @@ const App = () => {
           className="tab-panel"
         >
           <AuthGateway
-            session={session}
-            onLogin={handleLogin}
-            onRegister={handleRegister}
-            onLogout={handleLogout}
             isLoading={isSessionLoading}
-            isOfflineMode={isOfflineMode}
             isBackendReachable={isBackendReachable}
             isDarkMode={isDarkMode}
             onToggleDarkMode={handleToggleDarkMode}
+            apiBaseUrl={API_URL}
+            onOfflineAuth={handleOfflineAuth}
           />
         </section>
         <section

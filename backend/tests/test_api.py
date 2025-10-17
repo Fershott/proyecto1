@@ -8,6 +8,7 @@ import sys
 import types
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -172,6 +173,7 @@ def patched_storage(tmp_path, monkeypatch):
     stats_file = tmp_path / "stats.json"
     sessions_file = tmp_path / "sessions.json"
     users_file = tmp_path / "users.json"
+    oauth_states_file = tmp_path / "oauth_states.json"
 
     monkeypatch.setattr(storage, "TASKS_FILE", tasks_file)
     monkeypatch.setattr(storage, "REMINDERS_FILE", reminders_file)
@@ -180,7 +182,16 @@ def patched_storage(tmp_path, monkeypatch):
     monkeypatch.setattr(storage, "STATS_FILE", stats_file)
     monkeypatch.setattr(storage, "SESSIONS_FILE", sessions_file)
     monkeypatch.setattr(storage, "USERS_FILE", users_file)
+    monkeypatch.setattr(storage, "OAUTH_STATES_FILE", oauth_states_file)
     monkeypatch.setenv("COGNICORE_EMAIL_OUTBOX", str(tmp_path / "outbox"))
+    monkeypatch.setenv("COGNICORE_FRONTEND_URL", "http://localhost:5173")
+    monkeypatch.setenv("COGNICORE_OAUTH_MODE", "stub")
+    monkeypatch.setenv("COGNICORE_GOOGLE_CLIENT_ID", "test-google-id")
+    monkeypatch.setenv("COGNICORE_GOOGLE_CLIENT_SECRET", "test-google-secret")
+    monkeypatch.setenv("COGNICORE_GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback")
+    monkeypatch.setenv("COGNICORE_MICROSOFT_CLIENT_ID", "test-microsoft-id")
+    monkeypatch.setenv("COGNICORE_MICROSOFT_CLIENT_SECRET", "test-microsoft-secret")
+    monkeypatch.setenv("COGNICORE_MICROSOFT_REDIRECT_URI", "http://localhost:8000/auth/microsoft/callback")
 
     return storage
 
@@ -542,6 +553,57 @@ def test_provider_specific_endpoints(patched_storage):
         )
     )
     assert logged_ms.display_name == "Mentor Planner"
+
+
+def test_oauth_start_and_callback_flow(patched_storage):
+    response = main.start_google_oauth(
+        mode="register",
+        display_name="Estudiante Uno",
+        next="/panel",
+        stub_email="estudiante@gmail.com",
+    )
+    assert response.status_code == 307
+    location = response.headers.get("location")
+    assert location is not None
+    state_value = parse_qs(urlparse(location).query)["state"][0]
+
+    redirect_response = asyncio.run(main.google_callback(code="stub-code", state=state_value))
+    assert redirect_response.status_code == 303
+    redirect_location = redirect_response.headers.get("location")
+    assert redirect_location is not None
+    assert "auth=registered" in redirect_location
+    assert "provider=google" in redirect_location
+
+    session = main.get_session()
+    assert session is not None
+    assert session.provider is AuthProvider.GOOGLE
+    assert session.email == "estudiante@gmail.com"
+
+    main.clear_session()
+
+    login_redirect = main.start_google_oauth(
+        mode="login",
+        next="/panel",
+        stub_email="estudiante@gmail.com",
+    )
+    state_login = parse_qs(urlparse(login_redirect.headers["location"]).query)["state"][0]
+    login_result = asyncio.run(main.google_callback(code="stub-code", state=state_login))
+    assert "auth=signed-in" in login_result.headers["location"]
+
+    ms_register = main.start_microsoft_oauth(
+        mode="register",
+        display_name="Mentor Plan",
+        next="http://localhost:5173/dashboard",
+        stub_email="mentor@outlook.com",
+    )
+    state_ms = parse_qs(urlparse(ms_register.headers["location"]).query)["state"][0]
+    ms_result = asyncio.run(main.microsoft_callback(code="stub-code", state=state_ms))
+    assert "provider=microsoft" in ms_result.headers["location"]
+
+    session_ms = main.get_session()
+    assert session_ms is not None
+    assert session_ms.provider is AuthProvider.MICROSOFT
+    assert session_ms.email == "mentor@outlook.com"
 
 
 def test_summary_text_endpoint(patched_storage):
