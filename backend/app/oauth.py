@@ -7,7 +7,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 try:  # pragma: no cover - permite ejecutar pruebas sin instalar la dependencia
     import httpx
@@ -29,19 +29,37 @@ class OAuthConfig:
     scope: str
 
 
+DEFAULT_FRONTEND_URL = "http://localhost:5173"
+
+
+STUB_DEFAULTS = {
+    "COGNICORE_GOOGLE_CLIENT_ID": "stub-google-client-id",
+    "COGNICORE_GOOGLE_CLIENT_SECRET": "stub-google-client-secret",
+    "COGNICORE_GOOGLE_REDIRECT_URI": "http://localhost:8000/auth/google/callback",
+    "COGNICORE_MICROSOFT_CLIENT_ID": "stub-microsoft-client-id",
+    "COGNICORE_MICROSOFT_CLIENT_SECRET": "stub-microsoft-client-secret",
+    "COGNICORE_MICROSOFT_REDIRECT_URI": "http://localhost:8000/auth/microsoft/callback",
+    "COGNICORE_FRONTEND_URL": DEFAULT_FRONTEND_URL,
+}
+
+
 def _env(key: str) -> str:
-    """Recupera una variable de entorno y lanza un error descriptivo si falta."""
+    """Recupera una variable de entorno y provee valores seguros en modo stub."""
 
     value = os.getenv(key)
-    if not value:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Falta configurar la variable de entorno "
-                f"`{key}` para habilitar el inicio de sesión con proveedores externos."
-            ),
-        )
-    return value
+    if value:
+        return value
+    if is_stub_mode():
+        stub_default = STUB_DEFAULTS.get(key)
+        if stub_default:
+            return stub_default
+    raise HTTPException(
+        status_code=503,
+        detail=(
+            "Falta configurar la variable de entorno "
+            f"`{key}` para habilitar el inicio de sesión con proveedores externos."
+        ),
+    )
 
 
 def _build_config(prefix: str, default_scope: str) -> OAuthConfig:
@@ -248,14 +266,21 @@ def get_oauth_client(provider: AuthProvider) -> OAuthClient:
     raise HTTPException(status_code=400, detail="Proveedor de autenticación no soportado.")
 
 
-def resolve_frontend_base_url() -> str:
-    """Obtiene la URL base del frontend para redirigir tras iniciar sesión."""
+def resolve_frontend_base_url(candidate: str | None = None) -> str:
+    """Obtiene la URL base del frontend y ofrece fallbacks seguros para desarrollo."""
 
     value = os.getenv("COGNICORE_FRONTEND_URL")
-    if not value:
-        raise HTTPException(
-            status_code=503,
-            detail="Configura `COGNICORE_FRONTEND_URL` para completar el flujo de autenticación.",
-        )
-    return value.rstrip("/")
+    if value:
+        return value.rstrip("/")
+
+    if candidate:
+        parsed = urlparse(candidate)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+
+    if is_stub_mode():
+        return STUB_DEFAULTS["COGNICORE_FRONTEND_URL"].rstrip("/")
+
+    fallback = os.getenv("COGNICORE_DEFAULT_FRONTEND_URL", DEFAULT_FRONTEND_URL)
+    return fallback.rstrip("/")
 

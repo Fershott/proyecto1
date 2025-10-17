@@ -131,7 +131,8 @@ const TaskList = ({ tasks = [], onMarkComplete, onAdd, isSessionActive = true })
             <div className="list-item__body">
               <span className="list-item__title">{task.title}</span>
               <span className="list-item__meta">
-                {task.course} · {task.due_date ? new Date(task.due_date).toLocaleString('es-ES') : 'Sin fecha definida'}
+                {(task.course && task.course.trim()) || 'General'} ·{' '}
+                {task.due_date ? new Date(task.due_date).toLocaleString('es-ES') : 'Sin fecha definida'}
               </span>
               {task.notes && <span className="list-item__meta">{task.notes}</span>}
             </div>

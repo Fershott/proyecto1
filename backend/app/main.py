@@ -116,7 +116,7 @@ def _model_copy(instance, **kwargs):
 def _resolve_redirect_target(next_url: Optional[str]) -> str:
     """Valida y construye la URL de retorno tras completar OAuth."""
 
-    base = resolve_frontend_base_url()
+    base = resolve_frontend_base_url(next_url)
     if not next_url:
         return base
 
